@@ -5,10 +5,13 @@ frontend/.env
 
 # Backend
 backend/venv/
-backend/__pycache__/
+**/__pycache__/
+**/*.pyc
 backend/.env
-backend/*.pyc
+backend/instance/
 
 # Database & OS
 *.sqlite3
+*.db
 .DS_Store
+.vscode/

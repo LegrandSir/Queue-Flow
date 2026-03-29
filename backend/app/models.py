@@ -15,6 +15,8 @@ class Ticket(db.Model):
     ticket_number = db.Column(db.String(10), nullable=False)
     service_type = db.Column(db.String(50), nullable=False)
     status = db.Column(db.String(20), default='waiting') 
+    # NEW: priority_level (0 = Normal, 1 = Priority/PWD)
+    priority_level = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class User(db.Model):
@@ -37,6 +39,6 @@ class SystemSetting(db.Model):
     __tablename__ = 'system_settings'
     __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
-    setting_key = db.Column(db.String(50), unique=True, nullable=False) # e.g., 'max_wait_time'
-    setting_value = db.Column(db.String(100), nullable=False) # e.g., '15'
+    setting_key = db.Column(db.String(50), unique=True, nullable=False)
+    setting_value = db.Column(db.String(100), nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
