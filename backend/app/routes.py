@@ -9,10 +9,7 @@ from datetime import datetime, timedelta
 
 main = Blueprint('main', __name__)
 
-# --- CONFIGURATION ---
-API_KEY = "AIzaSyDe5XVDeCeHHea0pBy9nsBHaACwW-XW4Dk"
-# We use v1beta as it is the most reliable for the Flash model in 2026
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+
 
 # --- AI ADMIN INSIGHTS ---
 
