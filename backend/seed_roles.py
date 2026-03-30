@@ -4,6 +4,10 @@ from app.models import Role, User, SystemSetting
 app = create_app()
 
 with app.app_context():
+    # Create all tables (this will create 'tickets' with priority_level)
+    db.create_all()
+    print("✅ Tables created.")
+    
     # 1. Create Roles
     roles = ["Admin", "Staff"]
     for r_name in roles:
