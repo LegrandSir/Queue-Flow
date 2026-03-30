@@ -37,7 +37,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex min-h-screen bg-black">
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/4 relative overflow-hidden">
         <img 
           src="https://images.unsplash.com/photo-1506784919141-177b0ec7190b?q=80&w=2070" 
           alt="Queue Flow" 
