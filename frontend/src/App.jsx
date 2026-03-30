@@ -1,41 +1,59 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import KioskPage from './pages/KioskPage';
 import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard'; // This serves as your Staff Dashboard
+import Dashboard from './pages/Dashboard';
 import MobileTicketView from './pages/MobileTicketView';
 import AdminSettings from './pages/AdminSettings';
+import ServiceManagement from './pages/ServiceManagement';
+import StaffManagement from './pages/StaffManagement';
+import QueueReports from './pages/QueueReports';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   return (
     <Router>
-      <main className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50">
         <Routes>
-          {/* Public Entrance: Where customers select their service */}
           <Route path="/" element={<KioskPage />} />
-
-          {/* Secure Entrance: For Staff and Admin to authenticate */}
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* Management Dashboard: 
-            This is the "Staff Page" where employees call the next ticket 
-            and see the live queue sorted by priority.
-          */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          
-          {/* Admin Management: 
-            Advanced settings for clearing the queue, 
-            exporting CSVs, and adjusting system defaults.
-          */}
-          <Route path="/admin-settings" element={<AdminSettings />} />
-          
-          {/* Mobile Live Ticket Tracker: 
-            Customers scan a QR code on their ticket and see 
-            their live position in line via this route.
-          */}
+          <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+          <Route path="/dashboard" element={<Dashboard user={user} onLogout={handleLogout} />} />
+          <Route path="/admin-settings" element={<AdminSettings user={user} onLogout={handleLogout} />} />
+          <Route path="/admin/services" element={<ServiceManagement user={user} onLogout={handleLogout} />} />
+          <Route path="/admin/staff" element={<StaffManagement user={user} onLogout={handleLogout} />} />
           <Route path="/ticket/:ticketNumber" element={<MobileTicketView />} />
+          <Route path="/admin/reports" element={<QueueReports user={user} />} />
         </Routes>
-      </main>
+      </div>
     </Router>
   );
 }

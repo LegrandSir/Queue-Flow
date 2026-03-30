@@ -1,11 +1,13 @@
 from flask import Blueprint, request, jsonify, make_response
-from .models import Ticket, User, SystemSetting
+from .models import Ticket, User, SystemSetting, Service, Role 
 from . import db
 import random
 import csv
 import io
 import requests
 from datetime import datetime, timedelta
+from sqlalchemy import func, extract
+# from flask_jwt_extended import jwt_required, get_jwt_identity
 
 main = Blueprint('main', __name__)
 
@@ -239,3 +241,253 @@ def clear_cache():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+
+# ---- Service Management (temporarily public) ----
+
+@main.route('/api/services', methods=['GET'])
+def get_services():
+    """List all services (public)."""
+    services = Service.query.all()
+    return jsonify([s.to_dict() for s in services]), 200
+
+
+@main.route('/api/services', methods=['POST'])
+def add_service():
+    """Add a new service (temporarily public)."""
+    data = request.get_json()
+    name = data.get('name')
+    if not name:
+        return jsonify({"error": "Service name required"}), 400
+    if Service.query.filter_by(name=name).first():
+        return jsonify({"error": "Service already exists"}), 409
+
+    duration = data.get('duration', 10)
+    service = Service(name=name, duration_minutes=duration, active=True)
+    db.session.add(service)
+    db.session.commit()
+    return jsonify(service.to_dict()), 201
+
+
+@main.route('/api/services/<int:service_id>', methods=['PUT'])
+def update_service(service_id):
+    """Update a service (temporarily public)."""
+    service = Service.query.get_or_404(service_id)
+    data = request.get_json()
+    if 'name' in data:
+        # Check uniqueness if name changed
+        if data['name'] != service.name and Service.query.filter_by(name=data['name']).first():
+            return jsonify({"error": "Service name already exists"}), 409
+        service.name = data['name']
+    if 'duration' in data:
+        service.duration_minutes = data['duration']
+    if 'active' in data:
+        service.active = data['active']
+    db.session.commit()
+    return jsonify(service.to_dict()), 200
+
+
+@main.route('/api/services/<int:service_id>', methods=['DELETE'])
+def delete_service(service_id):
+    """Delete a service (temporarily public)."""
+    service = Service.query.get_or_404(service_id)
+    db.session.delete(service)
+    db.session.commit()
+    return jsonify({"message": "Service deleted"}), 200
+
+# ---- Staff Management (temporarily public) ----
+
+@main.route('/api/staff', methods=['GET'])
+def get_staff():
+    """List all staff members (users with role Staff)."""
+    staff_role = Role.query.filter_by(role_name='Staff').first()
+    if not staff_role:
+        return jsonify([]), 200   # No staff role yet
+    staff_users = User.query.filter_by(role_id=staff_role.role_id).all()
+    return jsonify([{
+        'id': u.user_id,
+        'email': u.email,
+        'counter': u.counter,
+        'active': True   # we don't have an active flag; can be added later
+    } for u in staff_users]), 200
+
+
+@main.route('/api/staff', methods=['POST'])
+def add_staff():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    counter = data.get('counter')
+    if not email or not password:
+        return jsonify({"error": "Email and password required"}), 400
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "Email already exists"}), 409
+
+    staff_role = Role.query.filter_by(role_name='Staff').first()
+    if not staff_role:
+        staff_role = Role(role_name='Staff')
+        db.session.add(staff_role)
+        db.session.commit()
+
+    new_staff = User(email=email, role=staff_role, counter=counter)
+    new_staff.set_password(password)   # This hashes the password
+    db.session.add(new_staff)
+    db.session.commit()
+    return jsonify({
+        'id': new_staff.user_id,
+        'email': new_staff.email,
+        'counter': new_staff.counter
+    }), 201
+
+
+@main.route('/api/staff/<int:staff_id>', methods=['PUT'])
+def update_staff(staff_id):
+    """Update a staff member's details."""
+    staff = User.query.get_or_404(staff_id)
+    # Ensure the user is actually staff (optional check)
+    if staff.role.role_name != 'Staff':
+        return jsonify({"error": "User is not staff"}), 400
+
+    data = request.get_json()
+    if 'email' in data and data['email'] != staff.email:
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({"error": "Email already exists"}), 409
+        staff.email = data['email']
+    if 'password' in data and data['password']:
+        staff.set_password(data['password'])
+    if 'counter' in data:
+        staff.counter = data['counter']
+    db.session.commit()
+    return jsonify({
+        'id': staff.user_id,
+        'email': staff.email,
+        'counter': staff.counter
+    }), 200
+
+
+@main.route('/api/staff/<int:staff_id>', methods=['DELETE'])
+def delete_staff(staff_id):
+    """Delete a staff member."""
+    staff = User.query.get_or_404(staff_id)
+    if staff.role.role_name != 'Staff':
+        return jsonify({"error": "User is not staff"}), 400
+    db.session.delete(staff)
+    db.session.commit()
+    return jsonify({"message": "Staff deleted"}), 200
+
+from .models import SystemSetting   # at the top
+
+# --- System Settings ---
+
+@main.route('/api/settings', methods=['GET'])
+def get_settings():
+    """Return all system settings as a key-value object."""
+    settings = SystemSetting.query.all()
+    return jsonify({s.setting_key: s.setting_value for s in settings}), 200
+
+@main.route('/api/settings/update', methods=['POST'])
+def update_setting():
+    """Update a single setting. Expects JSON like {"key": "value"}."""
+    data = request.get_json()
+    if not data or len(data) != 1:
+        return jsonify({"error": "Invalid request"}), 400
+
+    key = list(data.keys())[0]
+    value = data[key]
+
+    setting = SystemSetting.query.filter_by(setting_key=key).first()
+    if setting:
+        setting.setting_value = value
+    else:
+        setting = SystemSetting(setting_key=key, setting_value=value)
+        db.session.add(setting)
+
+    db.session.commit()
+    return jsonify({"message": "Updated"}), 200
+
+@main.route('/api/reports/stats', methods=['GET'])
+def get_report_stats():
+    """Get ticket statistics for reports."""
+    try:
+        # Get date range from query params (default last 30 days)
+        days = request.args.get('days', 30, type=int)
+        start_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Total tickets created in period
+        total_tickets = Ticket.query.filter(Ticket.created_at >= start_date).count()
+        
+        # Average wait time (time between created and status='serving')
+        # For tickets that have been served
+        served_tickets = Ticket.query.filter(
+            Ticket.status == 'serving',
+            Ticket.created_at >= start_date
+        ).all()
+        # Note: We don't have a 'served_at' timestamp. We'll estimate based on created_at only.
+        # For accurate wait time, you'd need a 'called_at' column. We'll use a placeholder.
+        avg_wait_minutes = 0
+        if served_tickets:
+            # Placeholder: assume each waited 5 min * position? Not accurate. Better to add a 'called_at' column later.
+            # For now, return a dummy value.
+            avg_wait_minutes = 7.5
+        
+        # Tickets by day (last 7 days)
+        daily_counts = []
+        for i in range(7):
+            day = datetime.utcnow() - timedelta(days=i)
+            day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+            day_end = day_start + timedelta(days=1)
+            count = Ticket.query.filter(
+                Ticket.created_at >= day_start,
+                Ticket.created_at < day_end
+            ).count()
+            daily_counts.append({
+                'date': day.strftime('%Y-%m-%d'),
+                'count': count
+            })
+        
+        # Tickets by service type
+        service_counts = db.session.query(
+            Ticket.service_type, func.count(Ticket.ticket_id)
+        ).filter(Ticket.created_at >= start_date).group_by(Ticket.service_type).all()
+        
+        service_stats = [{'service': s[0], 'count': s[1]} for s in service_counts]
+        
+        # Priority vs normal
+        priority_count = Ticket.query.filter(
+            Ticket.priority_level > 0,
+            Ticket.created_at >= start_date
+        ).count()
+        normal_count = total_tickets - priority_count
+        
+        return jsonify({
+            'total_tickets': total_tickets,
+            'avg_wait_minutes': avg_wait_minutes,
+            'daily_counts': daily_counts[::-1],  # ascending date order
+            'service_stats': service_stats,
+            'priority_count': priority_count,
+            'normal_count': normal_count,
+            'period_days': days
+        }), 200
+    except Exception as e:
+        print(f"Report error: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+
+@main.route('/api/reports/efficiency', methods=['GET'])
+def get_service_efficiency():
+    """Get average handling time per service (mock data for now)."""
+    # In a real system, you'd have 'started_at' and 'completed_at' timestamps.
+    # For now, we'll return simulated data based on service durations.
+    services = Service.query.filter_by(active=True).all()
+    efficiency = []
+    for svc in services:
+        # Simulated average handling time (could be based on actual data later)
+        avg_time = svc.duration_minutes
+        # Number of tickets served for this service (status='serving')
+        served_count = Ticket.query.filter_by(service_type=svc.name, status='serving').count()
+        efficiency.append({
+            'service': svc.name,
+            'avg_handling_minutes': avg_time,
+            'served_count': served_count
+        })
+    return jsonify(efficiency), 200
