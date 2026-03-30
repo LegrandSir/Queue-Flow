@@ -7,43 +7,20 @@ const KioskPage = () => {
   const [ticketData, setTicketData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPriority, setIsPriority] = useState(false);
-  const [services, setServices] = useState([]);
+  
+  // NEW: State for the dynamic cards
   const [kioskStatus, setKioskStatus] = useState({
     currently_serving: '---',
     estimated_wait: '5-10'
   });
 
-  // Map service names to icons (fallback to 📋)
-  const getIconForService = (serviceName) => {
-    const iconMap = {
-      'General Inquiry': 'ⓘ',
-      'Technical Support': '⚙️',
-      'Payments': '💳',
-      'Account Opening': '👤+',
-      'Document Submission': '📄',
-      'Lost & Found': '🔍',
-      'ID Card Replacement': '🪪',
-      'Complaints & Feedback': '💬',
-      'Bill Payment': '🧾',
-      'Document Notarization': '✍️',
-      'Passport Application': '🛂',
-      "Driver's License Renewal": '🚗',
-      'Visa Inquiry': '🌍',
-      'Product Return/Exchange': '🔄'
-    };
-    return iconMap[serviceName] || '📋';
-  };
-
-  // Fetch active services from backend
-  const fetchServices = async () => {
-    try {
-      const response = await fetch('/api/services');
-      const data = await response.json();
-      setServices(data.filter(s => s.active));
-    } catch (error) {
-      console.error("Failed to load services:", error);
-    }
-  };
+  const services = [
+    { id: 'inquiry', title: 'General Inquiry', desc: 'For basic questions and information.', icon: 'ⓘ' },
+    { id: 'account', title: 'Account Opening', desc: 'New account setup and registration.', icon: '👤+' },
+    { id: 'docs', title: 'Document Submission', desc: 'Submit required paperwork.', icon: '📄' },
+    { id: 'pay', title: 'Payments', desc: 'Process all types of transactions.', icon: '💳' },
+    { id: 'tech', title: 'Technical Support', desc: 'Assistance with technical issues.', icon: '⚙️' },
+  ];
 
   // Fetch live status from backend
   const fetchKioskStatus = async () => {
@@ -58,8 +35,8 @@ const KioskPage = () => {
     }
   };
 
+  // Poll status every 5 seconds
   useEffect(() => {
-    fetchServices();
     fetchKioskStatus();
     const interval = setInterval(fetchKioskStatus, 5000);
     return () => clearInterval(interval);
@@ -68,14 +45,14 @@ const KioskPage = () => {
   const handleTakeTicket = async () => {
     if (!selectedService) return;
     setIsLoading(true);
-    const selectedServiceObj = services.find(s => s.name === selectedService);
+    const serviceObj = services.find(s => s.id === selectedService);
 
     try {
       const response = await fetch('/api/tickets/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          service_type: selectedServiceObj.name,
+          service_type: serviceObj.title,
           priority: isPriority,
           timestamp: new Date().toISOString()
         }),
@@ -85,7 +62,7 @@ const KioskPage = () => {
 
       const data = await response.json();
       setTicketData(data); 
-      fetchKioskStatus(); // Update status cards
+      fetchKioskStatus(); // Update cards immediately after taking a ticket
     } catch (error) {
       console.error("Error generating ticket:", error);
       alert("Failed to connect to the server.");
@@ -112,7 +89,7 @@ const KioskPage = () => {
     <div className="min-h-screen bg-white flex flex-col items-center py-12 px-4">
       <header className="mb-12 text-center">
         <div className="text-officeq-blue text-6xl mb-4">🎫</div>
-        <h1 className="text-5xl font-black text-gray-900 tracking-tight">Welcome to OfficeQ Kiosk</h1>
+        <h1 className="text-5xl font-black text-officeq-blue tracking-tight">Welcome to OfficeQ Kiosk</h1>
         <p className="text-gray-500 mt-3 text-xl font-medium">Select Your Service</p>
       </header>
 
@@ -120,11 +97,11 @@ const KioskPage = () => {
         {services.map((s) => (
           <ServiceCard 
             key={s.id}
-            title={s.name}
-            description={`Estimated ${s.duration} min`}
-            icon={getIconForService(s.name)}
-            active={selectedService === s.name}
-            onSelect={() => setSelectedService(s.name)}
+            title={s.title}
+            description={s.desc}
+            icon={s.icon}
+            active={selectedService === s.id}
+            onSelect={() => setSelectedService(s.id)}
           />
         ))}
       </div>

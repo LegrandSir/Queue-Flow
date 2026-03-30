@@ -1,9 +1,17 @@
 from app import create_app, db
 from app.models import Role, User, SystemSetting, Service
+from app.models import Ticket, SystemSetting, get_kenya_time
 
 app = create_app()
 
 with app.app_context():
+    for ticket in Ticket.query.all():
+        # Convert UTC to Kenya time (add 3 hours)
+        ticket.created_at = ticket.created_at + timedelta(hours=3)
+    for setting in SystemSetting.query.all():
+        if setting.updated_at:
+            setting.updated_at = setting.updated_at + timedelta(hours=3)
+    db.session.commit()
     # Create all tables (if they don't exist)
     db.create_all()
     print("✅ Tables created.")
@@ -21,13 +29,13 @@ with app.app_context():
 
     # --- Create Admin User ---
     if not User.query.filter_by(email="prowler@officeq.com").first():
-        admin = User(email="prowler@officeq.com", role=admin_role)
+        admin = User(email="prowler@officeq.com", role=admin_role, full_name="Prowler Admin", id_number="ADM001")
         admin.set_password("Admin123!")
         db.session.add(admin)
 
     # --- Create Staff User ---
     if not User.query.filter_by(email="staff@officeq.com").first():
-        staff = User(email="staff@officeq.com", role=staff_role)
+        staff = User(email="staff@officeq.com", role=staff_role, full_name="Staff User", id_number="STF001")
         staff.set_password("Staff123!")
         db.session.add(staff)
 

@@ -110,7 +110,7 @@ const ServiceManagement = ({ user }) => {
             <span className="bg-officeq-blue text-white p-1 rounded">📋</span> OfficeQ
           </div>
           <nav className="space-y-2">
-            <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
+            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
               <span>🏠</span> Dashboard
             </button>
             

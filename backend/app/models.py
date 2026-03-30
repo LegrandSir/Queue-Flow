@@ -1,6 +1,12 @@
 from . import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+import pytz
+from datetime import datetime
+
+def get_kenya_time():
+    tz = pytz.timezone('Africa/Nairobi')
+    return datetime.now(tz)
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -14,7 +20,8 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.role_id'))
     counter = db.Column(db.String(50), nullable=True)
-    # Use the class directly, not a string
+    full_name = db.Column(db.String(100), nullable=True)   # new
+    id_number = db.Column(db.String(50), nullable=True)    # new
     role = db.relationship(Role, backref='users')
 
     def set_password(self, password):
@@ -30,14 +37,14 @@ class Ticket(db.Model):
     service_type = db.Column(db.String(50), nullable=False)
     status = db.Column(db.String(20), default='waiting')
     priority_level = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_kenya_time)
 
 class SystemSetting(db.Model):
     __tablename__ = 'system_settings'
     id = db.Column(db.Integer, primary_key=True)
     setting_key = db.Column(db.String(50), unique=True, nullable=False)
     setting_value = db.Column(db.String(100), nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_kenya_time)
 
 class Service(db.Model):
     __tablename__ = 'services'

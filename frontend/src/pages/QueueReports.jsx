@@ -66,7 +66,7 @@ const QueueReports = ({ user }) => {
             <span className="bg-officeq-blue text-white p-1 rounded">📋</span> OfficeQ
           </div>
           <nav className="space-y-2">
-            <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
+            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
               <span>🏠</span> Dashboard
             </button>
             {user.role === 'Admin' && (

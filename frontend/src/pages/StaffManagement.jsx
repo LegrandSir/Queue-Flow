@@ -6,7 +6,13 @@ const StaffManagement = ({ user }) => {
   const [staff, setStaff] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ email: '', password: '', counter: '' });
+  const [form, setForm] = useState({ 
+    email: '', 
+    password: '', 
+    full_name: '', 
+    id_number: '', 
+    counter: '' 
+  });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -34,10 +40,16 @@ const StaffManagement = ({ user }) => {
   const openModal = (staffMember = null) => {
     if (staffMember) {
       setEditing(staffMember);
-      setForm({ email: staffMember.email, password: '', counter: staffMember.counter || '' });
+      setForm({
+        email: staffMember.email,
+        password: '',
+        full_name: staffMember.full_name || '',
+        id_number: staffMember.id_number || '',
+        counter: staffMember.counter || ''
+      });
     } else {
       setEditing(null);
-      setForm({ email: '', password: '', counter: '' });
+      setForm({ email: '', password: '', full_name: '', id_number: '', counter: '' });
     }
     setModalOpen(true);
   };
@@ -101,7 +113,7 @@ const StaffManagement = ({ user }) => {
             <span className="bg-officeq-blue text-white p-1 rounded">📋</span> OfficeQ
           </div>
           <nav className="space-y-2">
-            <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
+            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
               <span>🏠</span> Dashboard
             </button>
             {user.role === 'Admin' && (
@@ -113,7 +125,7 @@ const StaffManagement = ({ user }) => {
                   <span>👥</span> Staff
                 </button>
                 <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                <span>📊</span> Reports
+                  <span>📊</span> Reports
                 </button>
                 <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
                   <span>⚙️</span> Admin Settings
@@ -142,6 +154,8 @@ const StaffManagement = ({ user }) => {
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-gray-500 text-sm font-medium">
               <tr>
+                <th className="px-6 py-4">Name</th>
+                <th className="px-6 py-4">ID Number</th>
                 <th className="px-6 py-4">Email</th>
                 <th className="px-6 py-4">Counter / Desk</th>
                 <th className="px-6 py-4">Actions</th>
@@ -150,7 +164,9 @@ const StaffManagement = ({ user }) => {
             <tbody className="divide-y divide-gray-100">
               {staff.map((member) => (
                 <tr key={member.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">{member.email}</td>
+                  <td className="px-6 py-4 font-medium">{member.full_name || '—'}</td>
+                  <td className="px-6 py-4">{member.id_number || '—'}</td>
+                  <td className="px-6 py-4">{member.email}</td>
                   <td className="px-6 py-4">{member.counter || '—'}</td>
                   <td className="px-6 py-4 space-x-3">
                     <button
@@ -177,6 +193,24 @@ const StaffManagement = ({ user }) => {
             <div className="bg-white rounded-2xl p-6 w-full max-w-md">
               <h2 className="text-2xl font-bold mb-4">{editing ? 'Edit Staff' : 'Add Staff'}</h2>
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={form.full_name}
+                    onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg p-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                  <input
+                    type="text"
+                    value={form.id_number}
+                    onChange={(e) => setForm({ ...form, id_number: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg p-2"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input

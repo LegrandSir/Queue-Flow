@@ -24,7 +24,7 @@ const LoginPage = ({ onLogin }) => {
         if (onLogin) onLogin(data.user);
         // Navigate based on role
         if (data.user.role === 'Admin') {
-          navigate('/admin-settings');
+          navigate('/admin-dashboard');
         } else {
           navigate('/dashboard');
         }

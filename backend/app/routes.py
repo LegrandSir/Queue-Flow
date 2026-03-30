@@ -7,6 +7,7 @@ import io
 import requests
 from datetime import datetime, timedelta
 from sqlalchemy import func, extract
+from .models import get_kenya_time
 # from flask_jwt_extended import jwt_required, get_jwt_identity
 
 main = Blueprint('main', __name__)
@@ -299,16 +300,17 @@ def delete_service(service_id):
 
 @main.route('/api/staff', methods=['GET'])
 def get_staff():
-    """List all staff members (users with role Staff)."""
     staff_role = Role.query.filter_by(role_name='Staff').first()
     if not staff_role:
-        return jsonify([]), 200   # No staff role yet
+        return jsonify([]), 200
     staff_users = User.query.filter_by(role_id=staff_role.role_id).all()
     return jsonify([{
         'id': u.user_id,
         'email': u.email,
+        'full_name': u.full_name,
+        'id_number': u.id_number,
         'counter': u.counter,
-        'active': True   # we don't have an active flag; can be added later
+        'active': True
     } for u in staff_users]), 200
 
 
@@ -317,6 +319,8 @@ def add_staff():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
+    full_name = data.get('full_name')
+    id_number = data.get('id_number')
     counter = data.get('counter')
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
@@ -329,38 +333,43 @@ def add_staff():
         db.session.add(staff_role)
         db.session.commit()
 
-    new_staff = User(email=email, role=staff_role, counter=counter)
-    new_staff.set_password(password)   # This hashes the password
+    new_staff = User(email=email, role=staff_role, counter=counter, full_name=full_name, id_number=id_number)
+    new_staff.set_password(password)
     db.session.add(new_staff)
     db.session.commit()
     return jsonify({
         'id': new_staff.user_id,
         'email': new_staff.email,
+        'full_name': new_staff.full_name,
+        'id_number': new_staff.id_number,
         'counter': new_staff.counter
     }), 201
 
 
 @main.route('/api/staff/<int:staff_id>', methods=['PUT'])
 def update_staff(staff_id):
-    """Update a staff member's details."""
     staff = User.query.get_or_404(staff_id)
-    # Ensure the user is actually staff (optional check)
     if staff.role.role_name != 'Staff':
         return jsonify({"error": "User is not staff"}), 400
-
     data = request.get_json()
     if 'email' in data and data['email'] != staff.email:
         if User.query.filter_by(email=data['email']).first():
             return jsonify({"error": "Email already exists"}), 409
         staff.email = data['email']
-    if 'password' in data and data['password']:
-        staff.set_password(data['password'])
+    if 'full_name' in data:
+        staff.full_name = data['full_name']
+    if 'id_number' in data:
+        staff.id_number = data['id_number']
     if 'counter' in data:
         staff.counter = data['counter']
+    if 'password' in data and data['password']:
+        staff.set_password(data['password'])
     db.session.commit()
     return jsonify({
         'id': staff.user_id,
         'email': staff.email,
+        'full_name': staff.full_name,
+        'id_number': staff.id_number,
         'counter': staff.counter
     }), 200
 
@@ -491,3 +500,77 @@ def get_service_efficiency():
             'served_count': served_count
         })
     return jsonify(efficiency), 200
+
+@main.route('/api/tickets/<int:ticket_id>/status', methods=['PUT'])
+def update_ticket_status(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    data = request.get_json()
+    new_status = data.get('status')
+    if new_status not in ['waiting', 'serving', 'completed', 'missed']:
+        return jsonify({"error": "Invalid status"}), 400
+    ticket.status = new_status
+    db.session.commit()
+    return jsonify({"message": "Status updated", "status": ticket.status}), 200
+
+@main.route('/api/staff/profile', methods=['GET'])
+def get_staff_profile():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Email required"}), 400
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({
+        "id": user.user_id,
+        "email": user.email,
+        "role": user.role.role_name,
+        "counter": user.counter,
+        "full_name": user.full_name,
+        "id_number": user.id_number
+    }), 200
+
+@main.route('/api/staff/profile', methods=['PUT'])
+def update_staff_profile():
+    data = request.get_json()
+    email = data.get('email')
+    if not email:
+        return jsonify({"error": "Email required"}), 400
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if 'full_name' in data:
+        user.full_name = data['full_name']
+    if 'counter' in data:
+        user.counter = data['counter']
+    if 'current_password' in data and 'new_password' in data:
+        if not user.check_password(data['current_password']):
+            return jsonify({"error": "Current password is incorrect"}), 401
+        if len(data['new_password']) < 6:
+            return jsonify({"error": "New password must be at least 6 characters"}), 400
+        user.set_password(data['new_password'])
+        # Optional: log password change (could add a simple notification table)
+    db.session.commit()
+    return jsonify({"message": "Profile updated"}), 200
+
+@main.route('/api/staff/reports', methods=['GET'])
+def get_staff_reports():
+    days = request.args.get('days', 30, type=int)
+    start_date = datetime.utcnow() - timedelta(days=days)
+    total_served = Ticket.query.filter(Ticket.status == 'completed', Ticket.created_at >= start_date).count()
+    # Average wait time for completed tickets (if we had called_at)
+    # For now, placeholder
+    avg_wait = 0
+    # Tickets per day
+    daily = []
+    for i in range(7):
+        day = datetime.utcnow() - timedelta(days=i)
+        day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        count = Ticket.query.filter(Ticket.created_at >= day_start, Ticket.created_at < day_end).count()
+        daily.append({'date': day.strftime('%Y-%m-%d'), 'count': count})
+    return jsonify({
+        'total_served': total_served,
+        'avg_wait_minutes': avg_wait,
+        'daily_counts': daily[::-1]
+    }), 200
