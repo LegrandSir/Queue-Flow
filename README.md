@@ -4,7 +4,7 @@ OfficeQ is a full-stack queue management solution designed to streamline custome
 🚀 Key Features
 Dual-Interface System: Separate portals for Customers (Kiosk) and Staff (Dashboard).
 
-Smart Mobile Assistant: A "mock-AI" chat interface that provides customers with real-time wait estimates and queue positions.
+Smart Mobile Assistant: A "AI" chat interface that provides customers with real-time wait estimates and queue positions.
 
 Operations Analytics: An Admin Insight engine that analyzes live database trends to provide staffing recommendations.
 
