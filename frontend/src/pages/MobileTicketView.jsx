@@ -17,14 +17,22 @@ const MobileTicketView = () => {
     try {
       const response = await fetch(`/api/tickets/status/${ticketNumber}`);
       const data = await response.json();
-      if (ticketStatus && ticketStatus.status === 'waiting' && data.status === 'serving') {
-        if (notificationsEnabled) {
+      
+      // Check for status change (from previous state)
+      if (ticketStatus && ticketStatus.status !== data.status && notificationsEnabled) {
+        if (data.status === 'serving') {
           new Notification("OfficeQ: It's Your Turn!", {
             body: `Please proceed to the counter. Your ticket ${ticketNumber} is being served.`,
             icon: "🎫"
           });
+        } else if (data.status === 'missed') {
+          new Notification("OfficeQ: Ticket Missed", {
+            body: `Your ticket ${ticketNumber} was missed. Please take a new ticket if you still need service.`,
+            icon: "⚠️"
+          });
         }
       }
+      
       setTicketStatus(data);
     } catch (error) {
       console.error("Error fetching ticket status:", error);
@@ -37,7 +45,8 @@ const MobileTicketView = () => {
     fetchStatus();
     const interval = setInterval(fetchStatus, 15000); 
     return () => clearInterval(interval);
-  }, [ticketNumber, notificationsEnabled, ticketStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticketNumber, notificationsEnabled]); // remove ticketStatus from deps
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -86,7 +95,7 @@ const MobileTicketView = () => {
         <div className="text-officeq-blue font-bold text-xl">Live Tracker</div>
       </div>
 
-      {/* Main Ticket Card (Your Original Design) */}
+      {/* Main Ticket Card */}
       <div className={`w-full max-w-md border-2 rounded-3xl shadow-xl p-8 text-center mb-6 transition-all duration-500 ${isServing ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}>
         <p className="text-gray-500 font-bold text-lg mb-2">Ticket Number</p>
         <h1 className={`text-7xl font-black mb-4 tracking-tighter ${isServing ? 'text-green-600' : 'text-officeq-blue'}`}>{ticketNumber}</h1>
@@ -94,7 +103,7 @@ const MobileTicketView = () => {
         <p className="text-gray-400 font-medium">{isServing ? 'Please proceed to the counter immediately.' : `Service: ${ticketStatus.service}`}</p>
       </div>
 
-      {/* Stats Card (Your Original Design) */}
+      {/* Stats Card */}
       <div className="w-full max-w-md bg-white border border-gray-100 rounded-3xl shadow-lg p-8 mb-6">
         <h2 className="text-gray-700 font-bold text-xl mb-6 tracking-tight">Real-Time Stats</h2>
         <div className="flex items-center gap-4 mb-8">
@@ -110,7 +119,7 @@ const MobileTicketView = () => {
         </div>
       </div>
 
-      {/* NEW: Gemini Smart Assistant Section */}
+      {/* AI Chat Section */}
       <div className="w-full max-w-md bg-white rounded-3xl shadow-lg border border-gray-100 flex flex-col mb-6 overflow-hidden">
         <div className="bg-gray-900 p-4 text-white font-bold flex items-center gap-2"><span>🤖</span> J.A.R.V.I.S</div>
         <div className="h-48 overflow-y-auto p-4 space-y-3 bg-gray-50">
@@ -125,7 +134,7 @@ const MobileTicketView = () => {
         </form>
       </div>
 
-      {/* Notification Toggle (Your Original Design) */}
+      {/* Notification Toggle */}
       <div className={`w-full max-w-md rounded-3xl p-6 border text-center ${notificationsEnabled ? 'bg-green-50 border-green-100' : 'bg-blue-50 border-blue-100'}`}>
         <h3 className={`font-bold text-lg mb-2 ${notificationsEnabled ? 'text-green-700' : 'text-officeq-blue'}`}>{notificationsEnabled ? '🔔 Alerts Active' : '🔔 Turn on Notifications'}</h3>
         {!notificationsEnabled && <button onClick={handleEnableNotifications} className="bg-officeq-blue text-white px-6 py-2 rounded-xl font-bold text-sm">Notify Me</button>}

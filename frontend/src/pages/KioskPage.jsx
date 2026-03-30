@@ -1,28 +1,49 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import ServiceCard from '../components/ServiceCard';
 import TicketView from '../components/TicketView';
 
-const KioskPage = () => {
+const ServiceStart = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [ticketData, setTicketData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPriority, setIsPriority] = useState(false);
-  
-  // NEW: State for the dynamic cards
+  const [services, setServices] = useState([]);
   const [kioskStatus, setKioskStatus] = useState({
     currently_serving: '---',
     estimated_wait: '5-10'
   });
 
-  const services = [
-    { id: 'inquiry', title: 'General Inquiry', desc: 'For basic questions and information.', icon: 'ⓘ' },
-    { id: 'account', title: 'Account Opening', desc: 'New account setup and registration.', icon: '👤+' },
-    { id: 'docs', title: 'Document Submission', desc: 'Submit required paperwork.', icon: '📄' },
-    { id: 'pay', title: 'Payments', desc: 'Process all types of transactions.', icon: '💳' },
-    { id: 'tech', title: 'Technical Support', desc: 'Assistance with technical issues.', icon: '⚙️' },
-  ];
+  const getIconForService = (serviceName) => {
+    const iconMap = {
+      'General Inquiry': '💬',
+      'Technical Support': '⚙️',
+      'Payments': '💳',
+      'Account Opening': '👤+',
+      'Document Submission': '📄',
+      'Lost & Found': '🔍',
+      'ID Card Replacement': '🪪',
+      'Complaints & Feedback': '💬',
+      'Bill Payment': '🧾',
+      'Document Notarization': '✍️',
+      'Passport Application': '🛂',
+      "Driver's License Renewal": '🚗',
+      'Visa Inquiry': '🌍',
+      'Product Return/Exchange': '🔄'
+    };
+    return iconMap[serviceName] || '📋';
+  };
 
-  // Fetch live status from backend
+  const fetchServices = async () => {
+    try {
+      const response = await fetch('/api/services');
+      const data = await response.json();
+      setServices(data.filter(s => s.active));
+    } catch (error) {
+      console.error("Failed to load services:", error);
+    }
+  };
+
   const fetchKioskStatus = async () => {
     try {
       const response = await fetch('/api/kiosk/status');
@@ -35,8 +56,8 @@ const KioskPage = () => {
     }
   };
 
-  // Poll status every 5 seconds
   useEffect(() => {
+    fetchServices();
     fetchKioskStatus();
     const interval = setInterval(fetchKioskStatus, 5000);
     return () => clearInterval(interval);
@@ -45,14 +66,14 @@ const KioskPage = () => {
   const handleTakeTicket = async () => {
     if (!selectedService) return;
     setIsLoading(true);
-    const serviceObj = services.find(s => s.id === selectedService);
+    const selectedServiceObj = services.find(s => s.name === selectedService);
 
     try {
       const response = await fetch('/api/tickets/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          service_type: serviceObj.title,
+          service_type: selectedServiceObj.name,
           priority: isPriority,
           timestamp: new Date().toISOString()
         }),
@@ -62,7 +83,7 @@ const KioskPage = () => {
 
       const data = await response.json();
       setTicketData(data); 
-      fetchKioskStatus(); // Update cards immediately after taking a ticket
+      fetchKioskStatus();
     } catch (error) {
       console.error("Error generating ticket:", error);
       alert("Failed to connect to the server.");
@@ -87,37 +108,52 @@ const KioskPage = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center py-12 px-4">
-      <header className="mb-12 text-center">
-        <div className="text-officeq-blue text-6xl mb-4">🎫</div>
-        <h1 className="text-5xl font-black text-gray-900 tracking-tight">Welcome to OfficeQ Kiosk</h1>
-        <p className="text-gray-500 mt-3 text-xl font-medium">Select Your Service</p>
+      <header className="mb-12 text-center relative">
+        <div className="absolute top-0 right-0">
+          <Link 
+            to="/login" 
+            className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition-colors"
+          >
+            Staff Login
+          </Link>
+        </div>
+        <img src="/logo.png" alt="OfficeQ Logo" className="h-24 w-auto mx-auto mb-4" />
+        <h1 className="text-5xl font-black text-gray-900 tracking-tight">Get a Ticket</h1>
+        <p className="text-gray-500 mt-3 text-xl font-medium">Select a service to start your queue ticket</p>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-5xl">
         {services.map((s) => (
           <ServiceCard 
             key={s.id}
-            title={s.title}
-            description={s.desc}
-            icon={s.icon}
-            active={selectedService === s.id}
-            onSelect={() => setSelectedService(s.id)}
+            title={s.name}
+            description={`Estimated ${s.duration} min`}
+            icon={getIconForService(s.name)}
+            active={selectedService === s.name}
+            onSelect={() => {
+              setSelectedService(s.name);
+              // Reset priority when service changes (optional)
+              setIsPriority(false);
+            }}
           />
         ))}
       </div>
 
-      <div className="mt-10 p-6 bg-blue-50 rounded-2xl border-2 border-blue-100 w-full max-w-lg flex items-center justify-between">
-        <div>
-          <h4 className="font-bold text-gray-800 text-lg">Priority Attention</h4>
-          <p className="text-sm text-blue-600">For PWD, elderly, or expectant mothers</p>
+      {/* Priority toggle – only shown after a service is selected */}
+      {selectedService && (
+        <div className="mt-10 p-6 bg-blue-50 rounded-2xl border-2 border-blue-100 w-full max-w-lg flex items-center justify-between">
+          <div>
+            <h4 className="font-bold text-gray-800 text-lg">Priority Attention</h4>
+            <p className="text-sm text-blue-600">For PWD, elderly, or expectant mothers</p>
+          </div>
+          <button 
+            onClick={() => setIsPriority(!isPriority)}
+            className={`w-14 h-8 rounded-full transition-colors relative ${isPriority ? 'bg-officeq-blue' : 'bg-gray-300'}`}
+          >
+            <div className={`absolute top-1 bg-white w-6 h-6 rounded-full transition-transform ${isPriority ? 'left-7' : 'left-1'}`}></div>
+          </button>
         </div>
-        <button 
-          onClick={() => setIsPriority(!isPriority)}
-          className={`w-14 h-8 rounded-full transition-colors relative ${isPriority ? 'bg-officeq-blue' : 'bg-gray-300'}`}
-        >
-          <div className={`absolute top-1 bg-white w-6 h-6 rounded-full transition-transform ${isPriority ? 'left-7' : 'left-1'}`}></div>
-        </button>
-      </div>
+      )}
 
       <button 
         onClick={handleTakeTicket}
@@ -132,7 +168,7 @@ const KioskPage = () => {
 
       <div className="w-full max-w-5xl h-px bg-gray-200 my-16"></div>
 
-      {/* DYNAMIC STATUS CARDS */}
+      {/* Dynamic Status Cards */}
       <div className="w-full max-w-5xl">
         <h2 className="text-3xl font-black text-center text-gray-800 mb-10">Current Queue Status</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -157,4 +193,4 @@ const KioskPage = () => {
   );
 };
 
-export default KioskPage;
+export default ServiceStart;
