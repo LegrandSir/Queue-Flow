@@ -50,7 +50,6 @@ const QueueManagement = ({ user }) => {
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA]">
-      {/* Sidebar (similar to Dashboard) */}
       <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
         <div>
           <div className="flex items-center gap-2 text-officeq-blue font-bold text-xl mb-8">
@@ -94,7 +93,7 @@ const QueueManagement = ({ user }) => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {tickets.map(ticket => (
-                  <tr key={ticket.id} className="hover:bg-gray-50">
+                  <tr key={ticket.id} className={`hover:bg-gray-50 ${ticket.status === 'serving' ? 'bg-green-50' : ''}`}>
                     <td className="px-6 py-4 font-bold text-officeq-blue">{ticket.ticket_number}</td>
                     <td className="px-6 py-4">{ticket.service_type}</td>
                     <td className="px-6 py-4">
@@ -102,16 +101,22 @@ const QueueManagement = ({ user }) => {
                         {ticket.priority_level > 0 ? 'HIGH' : 'NORMAL'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 capitalize">{ticket.status}</td>
+                    <td className="px-6 py-4 capitalize">
+                      {ticket.status === 'serving' ? (
+                        <span className="text-green-600 font-bold">SERVING</span>
+                      ) : ticket.status === 'waiting' ? (
+                        <span className="text-yellow-600 font-bold">WAITING</span>
+                      ) : ticket.status}
+                    </td>
                     <td className="px-6 py-4 space-x-2">
                       {ticket.status === 'waiting' && (
-                        <button onClick={() => updateStatus(ticket.id, 'serving')} className="bg-green-500 text-white px-3 py-1 rounded text-sm">Serve</button>
+                        <>
+                          <button onClick={() => updateStatus(ticket.id, 'serving')} className="bg-green-500 text-white px-3 py-1 rounded text-sm">Serve</button>
+                          <button onClick={() => updateStatus(ticket.id, 'missed')} className="bg-red-500 text-white px-3 py-1 rounded text-sm">Missed</button>
+                        </>
                       )}
                       {ticket.status === 'serving' && (
                         <button onClick={() => updateStatus(ticket.id, 'completed')} className="bg-blue-500 text-white px-3 py-1 rounded text-sm">Complete</button>
-                      )}
-                      {ticket.status !== 'missed' && ticket.status !== 'completed' && (
-                        <button onClick={() => updateStatus(ticket.id, 'missed')} className="bg-red-500 text-white px-3 py-1 rounded text-sm">Missed</button>
                       )}
                     </td>
                   </tr>

@@ -7,6 +7,7 @@ const StaffDashboard = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedService, setSelectedService] = useState('');
   const [availableServices, setAvailableServices] = useState([]);
+  const [nowServing, setNowServing] = useState('---');
 
   // Fetch services from backend
   useEffect(() => {
@@ -24,7 +25,7 @@ const StaffDashboard = ({ user }) => {
     fetchServices();
   }, []);
 
-  // Fetch queue
+  // Fetch queue (waiting tickets)
   const fetchQueue = async () => {
     try {
       const response = await fetch('/api/tickets/active');
@@ -35,9 +36,25 @@ const StaffDashboard = ({ user }) => {
     }
   };
 
+  // Fetch currently serving ticket
+  const fetchNowServing = async () => {
+    try {
+      const response = await fetch('/api/kiosk/status');
+      const data = await response.json();
+      setNowServing(data.currently_serving || '---');
+    } catch (error) {
+      console.error("Error fetching serving ticket:", error);
+    }
+  };
+
+  // Poll both every 5 seconds
   useEffect(() => {
     fetchQueue();
-    const interval = setInterval(fetchQueue, 5000);
+    fetchNowServing();
+    const interval = setInterval(() => {
+      fetchQueue();
+      fetchNowServing();
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -54,6 +71,7 @@ const StaffDashboard = ({ user }) => {
       if (response.ok) {
         alert(data.message);
         fetchQueue();
+        fetchNowServing();  // immediately update serving ticket
       } else {
         alert(data.message);
       }
@@ -125,6 +143,18 @@ const StaffDashboard = ({ user }) => {
             </div>
           </header>
 
+          {/* Now Serving Card */}
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm uppercase font-bold tracking-wider">Now Serving</p>
+                <p className="text-5xl font-black text-officeq-blue mt-2">{nowServing}</p>
+                <p className="text-gray-400 text-sm mt-1">Ticket currently at counter</p>
+              </div>
+              <div className="text-6xl">🎫</div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* QUEUE LIST */}
             <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -141,7 +171,7 @@ const StaffDashboard = ({ user }) => {
                       <th className="px-6 py-4">Ticket</th>
                       <th className="px-6 py-4">Service</th>
                       <th className="px-6 py-4">Priority</th>
-                      <th className="px-6 py-4">Wait Time</th>
+                      <th className="px-6 py-4">Time</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">

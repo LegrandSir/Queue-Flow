@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -82,9 +82,22 @@ const LoginPage = ({ onLogin }) => {
             type="submit"
             className="w-full py-4 bg-officeq-blue text-white font-bold rounded-lg hover:bg-blue-600 transition-all shadow-lg"
           >
-            Sign In
+            Log In
           </button>
         </form>
+
+        {/* Back to Kiosk link */}
+        <div className="text-center mt-6">
+          <Link to="/" className="text-officeq-blue hover:underline text-sm">
+            ← Get a Ticket
+          </Link>
+        </div>
+
+        {/* Restriction notice */}
+        <div className="text-center mt-4 text-xs text-gray-400 border-t pt-4">
+          ⚠️ This portal is restricted to authorized staff and administrators only.  
+          Customers, please use the kiosk to take a ticket.
+        </div>
       </div>
     </div>
   );

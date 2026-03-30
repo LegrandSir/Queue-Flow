@@ -8,6 +8,8 @@ import requests
 from datetime import datetime, timedelta
 from sqlalchemy import func, extract
 from .models import get_kenya_time
+from .models import Ticket
+from flask import jsonify
 # from flask_jwt_extended import jwt_required, get_jwt_identity
 
 main = Blueprint('main', __name__)
@@ -172,9 +174,10 @@ def get_ticket_status(ticket_num):
 
 @main.route('/api/tickets/active', methods=['GET'])
 def get_active_tickets():
-    # Fetch waiting tickets ordered by priority first, then time
-    active_tickets = Ticket.query.filter_by(status='waiting')\
+    # Return waiting AND serving tickets (ordered by priority and time)
+    active_tickets = Ticket.query.filter(Ticket.status.in_(['waiting', 'serving']))\
         .order_by(Ticket.priority_level.desc(), Ticket.created_at.asc()).all()
+    # ... rest same
     
     return jsonify([{
         "id": t.ticket_id,
@@ -573,4 +576,21 @@ def get_staff_reports():
         'total_served': total_served,
         'avg_wait_minutes': avg_wait,
         'daily_counts': daily[::-1]
+    }), 200
+
+
+@main.route('/api/kiosk/status', methods=['GET'])
+def kiosk_status():
+    """Get currently serving ticket and estimated wait time for the kiosk display."""
+    # Get the first ticket with status 'serving' (if any)
+    serving_ticket = Ticket.query.filter_by(status='serving').first()
+    currently_serving = serving_ticket.ticket_number if serving_ticket else '---'
+
+    # Estimate wait time based on number of waiting tickets
+    waiting_count = Ticket.query.filter_by(status='waiting').count()
+    estimated_wait = str(waiting_count * 5)  # 5 minutes per person
+
+    return jsonify({
+        "currently_serving": currently_serving,
+        "estimated_wait": estimated_wait
     }), 200
