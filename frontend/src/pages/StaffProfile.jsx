@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';   // <-- added
 
 const StaffProfile = ({ user }) => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ const StaffProfile = ({ user }) => {
       });
     } catch (err) {
       console.error(err);
+      toast.error('Failed to load profile');   // <-- added
     }
   };
 
@@ -40,6 +42,7 @@ const StaffProfile = ({ user }) => {
     setMessage('');
     if (newPassword && newPassword !== confirmPassword) {
       setMessage('New passwords do not match');
+      toast.error('New passwords do not match');   // <-- added
       return;
     }
     setLoading(true);
@@ -61,20 +64,24 @@ const StaffProfile = ({ user }) => {
       const data = await res.json();
       if (res.ok) {
         setMessage('Profile updated successfully');
+        toast.success('Profile updated successfully');   // <-- added
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
         // If password changed, you may want to log out or show info
         if (currentPassword && newPassword) {
-          alert('Password changed. Please log in again.');
-          localStorage.removeItem('user');
-          navigate('/login');
+          toast.success('Password changed. Please log in again.');   // <-- replaced alert
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('')
         }
       } else {
         setMessage(data.error || 'Update failed');
+        toast.error(data.error || 'Update failed');   // <-- added
       }
     } catch (err) {
       setMessage('Error updating profile');
+      toast.error('Error updating profile');   // <-- added
     } finally {
       setLoading(false);
     }
@@ -83,6 +90,7 @@ const StaffProfile = ({ user }) => {
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
+    toast.success('Logged out');   // <-- added (optional)
   };
 
   if (!user) return null;

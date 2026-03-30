@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';  // <-- added
 
 const QueueManagement = ({ user }) => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const QueueManagement = ({ user }) => {
       setTickets(data);
     } catch (err) {
       console.error(err);
+      toast.error('Failed to fetch tickets');  // <-- added
     } finally {
       setLoading(false);
     }
@@ -33,17 +35,19 @@ const QueueManagement = ({ user }) => {
       });
       if (res.ok) {
         fetchTickets();
+        toast.success(`Ticket status updated to ${status}`);  // <-- added
       } else {
-        alert('Failed to update status');
+        toast.error('Failed to update status');  // <-- replaced alert
       }
     } catch (err) {
-      alert('Error updating status');
+      toast.error('Error updating status');  // <-- replaced alert
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
+    toast.success('Logged out');  // <-- added (optional)
   };
 
   if (!user) return null;

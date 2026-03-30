@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';  // <-- added
 
 const AdminSettings = ({ user }) => {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ const AdminSettings = ({ user }) => {
         }
       } catch (err) {
         console.error("Failed to fetch settings", err);
+        toast.error("Failed to load settings"); // <-- added
       } finally {
         setLoading(false);
       }
@@ -55,9 +57,10 @@ const AdminSettings = ({ user }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: value })
       });
+      toast.success("Setting saved"); // <-- added success notification
     } catch (err) {
       console.error("Failed to save setting", err);
-      alert("Failed to save setting. Check console.");
+      toast.error("Failed to save setting"); // <-- replaced alert
     } finally {
       setSaving(false);
     }
@@ -75,19 +78,23 @@ const AdminSettings = ({ user }) => {
         document.body.appendChild(a);
         a.click();
         a.remove();
+        toast.success("Data exported successfully"); // <-- added success
       } else {
-        alert("Export failed");
+        toast.error("Export failed"); // <-- replaced alert
       }
     } catch (err) {
-      alert("Failed to export data");
+      toast.error("Failed to export data"); // <-- replaced alert
     }
   };
 
   const handleClearCache = async () => {
     if (window.confirm("Warning: This will delete ALL active tickets. Continue?")) {
       const response = await fetch('/api/system/clear-cache', { method: 'POST' });
-      if (response.ok) alert("Queue cache cleared!");
-      else alert("Clear cache failed");
+      if (response.ok) {
+        toast.success("Queue cache cleared!"); // <-- replaced alert
+      } else {
+        toast.error("Clear cache failed"); // <-- replaced alert
+      }
     }
   };
 
@@ -95,10 +102,10 @@ const AdminSettings = ({ user }) => {
     if (window.confirm("Reboot will reset SLA targets and reload the system. Continue?")) {
       const response = await fetch('/api/system/reboot', { method: 'POST' });
       if (response.ok) {
-        alert("System rebooted: SLA targets reset.");
-        window.location.reload();
+        toast.success("System rebooted. Page will reload."); // <-- replaced alert
+        setTimeout(() => window.location.reload(), 1500);
       } else {
-        alert("Reboot failed");
+        toast.error("Reboot failed"); // <-- replaced alert
       }
     }
   };
@@ -106,6 +113,7 @@ const AdminSettings = ({ user }) => {
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
+    toast.success("Logged out"); // <-- added optional
   };
 
   if (!user) return null;
@@ -119,7 +127,7 @@ const AdminSettings = ({ user }) => {
             <span className="bg-officeq-blue text-white p-1 rounded">📋</span> OfficeQ
           </div>
           <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
+            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
               <span>🏠</span> Dashboard
             </button>
             {user.role === 'Admin' && (
@@ -131,8 +139,8 @@ const AdminSettings = ({ user }) => {
                   <span>👥</span> Staff
                 </button>
                 <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-  <span>📊</span> Reports
-</button>
+                  <span>📊</span> Reports
+                </button>
                 <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
                   <span>⚙️</span> Admin Settings
                 </button>

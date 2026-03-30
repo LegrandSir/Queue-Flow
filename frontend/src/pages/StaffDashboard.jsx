@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';
 
 const StaffDashboard = ({ user }) => {
   const navigate = useNavigate();
@@ -8,6 +10,7 @@ const StaffDashboard = ({ user }) => {
   const [selectedService, setSelectedService] = useState('');
   const [availableServices, setAvailableServices] = useState([]);
   const [nowServing, setNowServing] = useState('---');
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, service: null });
 
   // Fetch services from backend
   useEffect(() => {
@@ -20,12 +23,13 @@ const StaffDashboard = ({ user }) => {
         if (active.length > 0) setSelectedService(active[0].name);
       } catch (err) {
         console.error("Failed to fetch services", err);
+        toast.error("Failed to fetch services");
       }
     };
     fetchServices();
   }, []);
 
-  // Fetch queue (waiting tickets)
+  // Fetch all active tickets (both waiting and serving)
   const fetchQueue = async () => {
     try {
       const response = await fetch('/api/tickets/active');
@@ -33,10 +37,11 @@ const StaffDashboard = ({ user }) => {
       setActiveTickets(data);
     } catch (error) {
       console.error("Error fetching queue:", error);
+      toast.error("Failed to fetch queue");
     }
   };
 
-  // Fetch currently serving ticket
+  // Fetch currently serving ticket (for the card)
   const fetchNowServing = async () => {
     try {
       const response = await fetch('/api/kiosk/status');
@@ -47,7 +52,7 @@ const StaffDashboard = ({ user }) => {
     }
   };
 
-  // Poll both every 5 seconds
+  // Poll every 5 seconds
   useEffect(() => {
     fetchQueue();
     fetchNowServing();
@@ -58,36 +63,56 @@ const StaffDashboard = ({ user }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleCallNext = async () => {
+  // Open confirmation dialog before calling next
+  const openConfirmDialog = () => {
     if (!selectedService) return;
+    setConfirmDialog({ open: true, service: selectedService });
+  };
+
+  // Actual call next after confirmation
+  const handleCallNextConfirmed = async () => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/tickets/call-next', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ service: selectedService }),
+        body: JSON.stringify({ service: confirmDialog.service }),
       });
       const data = await response.json();
       if (response.ok) {
-        alert(data.message);
+        toast.success(data.message);
         fetchQueue();
-        fetchNowServing();  // immediately update serving ticket
+        fetchNowServing();
       } else {
-        alert(data.message);
+        toast.error(data.message);
       }
     } catch (error) {
-      alert("Failed to call next ticket.");
+      toast.error("Failed to call next ticket.");
     } finally {
       setIsLoading(false);
+      setConfirmDialog({ open: false, service: null });
     }
+  };
+
+  const handleCancelConfirm = () => {
+    setConfirmDialog({ open: false, service: null });
   };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
+    toast.success('Logged out');
   };
 
   if (!user) return null;
+
+  // Filter tickets by status
+  const waitingTickets = activeTickets.filter(t => t.status === 'waiting');
+  const servingTickets = activeTickets.filter(t => t.status === 'serving');
+
+  // Stats for waiting only
+  const priorityWaiting = waitingTickets.filter(t => t.priority_level > 0).length;
+  const standardWaiting = waitingTickets.filter(t => t.priority_level === 0).length;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -134,7 +159,7 @@ const StaffDashboard = ({ user }) => {
                 {availableServices.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
               <button
-                onClick={handleCallNext}
+                onClick={openConfirmDialog}
                 disabled={isLoading}
                 className="bg-officeq-blue text-white px-8 py-3 rounded-xl font-black shadow-lg hover:bg-blue-700 transition-all disabled:opacity-50"
               >
@@ -155,13 +180,59 @@ const StaffDashboard = ({ user }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* QUEUE LIST */}
-            <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          {/* Waiting Tickets Table */}
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-xl font-black text-gray-800">Waiting Tickets</h2>
+              <span className="bg-blue-100 text-officeq-blue px-4 py-1 rounded-full text-sm font-bold">
+                {waitingTickets.length} in line
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 text-gray-400 text-xs uppercase font-black">
+                  <tr>
+                    <th className="px-6 py-4">Ticket</th>
+                    <th className="px-6 py-4">Service</th>
+                    <th className="px-6 py-4">Priority</th>
+                    <th className="px-6 py-4">Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {waitingTickets.length > 0 ? waitingTickets.map((ticket) => (
+                    <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className={`font-black text-lg ${ticket.priority_level > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                          {ticket.ticket_number}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-600">{ticket.service_type}</td>
+                      <td className="px-6 py-4">
+                        {ticket.priority_level > 0 ? (
+                          <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-black">PRIORITY</span>
+                        ) : (
+                          <span className="bg-gray-100 text-gray-400 px-3 py-1 rounded-full text-xs font-black">STANDARD</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-gray-400 text-sm">
+                        {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="4" className="px-6 py-12 text-center text-gray-400 font-medium">No waiting tickets.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Currently Serving Tickets Table (only if there are serving tickets) */}
+          {servingTickets.length > 0 && (
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="text-xl font-black text-gray-800">Waiting Tickets</h2>
-                <span className="bg-blue-100 text-officeq-blue px-4 py-1 rounded-full text-sm font-bold">
-                  {activeTickets.length} in line
+                <h2 className="text-xl font-black text-gray-800">Currently Serving</h2>
+                <span className="bg-green-100 text-green-700 px-4 py-1 rounded-full text-sm font-bold">
+                  {servingTickets.length} at counter
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -171,18 +242,14 @@ const StaffDashboard = ({ user }) => {
                       <th className="px-6 py-4">Ticket</th>
                       <th className="px-6 py-4">Service</th>
                       <th className="px-6 py-4">Priority</th>
-                      <th className="px-6 py-4">Time</th>
+                      <th className="px-6 py-4">Started At</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {activeTickets.length > 0 ? activeTickets.map((ticket) => (
-                      <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <span className={`font-black text-lg ${ticket.priority_level > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                            {ticket.ticket_number}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 font-medium text-gray-600">{ticket.service_type}</td>
+                    {servingTickets.map((ticket) => (
+                      <tr key={ticket.id} className="bg-green-50">
+                        <td className="px-6 py-4 font-black text-officeq-blue">{ticket.ticket_number}</td>
+                        <td className="px-6 py-4 text-gray-700">{ticket.service_type}</td>
                         <td className="px-6 py-4">
                           {ticket.priority_level > 0 ? (
                             <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-black">PRIORITY</span>
@@ -190,34 +257,31 @@ const StaffDashboard = ({ user }) => {
                             <span className="bg-gray-100 text-gray-400 px-3 py-1 rounded-full text-xs font-black">STANDARD</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-gray-400 text-sm">
+                        <td className="px-6 py-4 text-gray-500 text-sm">
                           {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </td>
                       </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan="4" className="px-6 py-12 text-center text-gray-400 font-medium">
-                          The queue is currently empty.
-                        </td>
-                      </tr>
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
             </div>
+          )}
 
-            {/* STATS SIDEBAR */}
+          {/* Quick Stats Sidebar (original placement – but we already have stats, keep for consistency) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2"></div>
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                 <h3 className="text-gray-400 font-black text-sm uppercase mb-4">Quick Stats</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 font-medium">Priority Waiting</span>
-                    <span className="text-red-600 font-black">{activeTickets.filter(t => t.priority_level > 0).length}</span>
+                    <span className="text-red-600 font-black">{priorityWaiting}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 font-medium">Standard Waiting</span>
-                    <span className="text-gray-900 font-black">{activeTickets.filter(t => t.priority_level === 0).length}</span>
+                    <span className="text-gray-900 font-black">{standardWaiting}</span>
                   </div>
                 </div>
               </div>
@@ -225,6 +289,15 @@ const StaffDashboard = ({ user }) => {
           </div>
         </div>
       </main>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.open}
+        title="Call Next Ticket"
+        message={`Are you sure you want to call the next ticket for "${confirmDialog.service}"?`}
+        onConfirm={handleCallNextConfirmed}
+        onCancel={handleCancelConfirm}
+      />
     </div>
   );
 };

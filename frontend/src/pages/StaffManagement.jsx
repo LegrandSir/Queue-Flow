@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';   // adjust path if needed
 
 const StaffManagement = ({ user }) => {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ const StaffManagement = ({ user }) => {
     counter: '' 
   });
   const [loading, setLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null });  // <-- added
 
   useEffect(() => {
     if (!user) {
@@ -30,6 +33,7 @@ const StaffManagement = ({ user }) => {
       setStaff(data);
     } catch (err) {
       console.error("Failed to fetch staff");
+      toast.error("Failed to fetch staff");
     }
   };
 
@@ -60,7 +64,7 @@ const StaffManagement = ({ user }) => {
     const url = editing ? `/api/staff/${editing.id}` : '/api/staff';
     const body = { ...form };
     if (!editing && !body.password) {
-      alert('Password is required for new staff');
+      toast.error('Password is required for new staff');
       setLoading(false);
       return;
     }
@@ -73,34 +77,47 @@ const StaffManagement = ({ user }) => {
       if (res.ok) {
         fetchStaff();
         setModalOpen(false);
+        toast.success(editing ? 'Staff updated' : 'Staff added');
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to save staff');
+        toast.error(err.error || 'Failed to save staff');
       }
     } catch (err) {
-      alert('Error saving staff');
+      toast.error('Error saving staff');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Remove this staff member?')) return;
+  const handleDeleteClick = (id) => {
+    setConfirmDialog({ open: true, id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = confirmDialog.id;
     try {
       const res = await fetch(`/api/staff/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchStaff();
+        toast.success('Staff removed');
       } else {
-        alert('Failed to delete staff');
+        toast.error('Failed to delete staff');
       }
     } catch (err) {
-      alert('Error deleting staff');
+      toast.error('Error deleting staff');
+    } finally {
+      setConfirmDialog({ open: false, id: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setConfirmDialog({ open: false, id: null });
   };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
+    toast.success('Logged out');
   };
 
   if (!user) return null;
@@ -113,7 +130,7 @@ const StaffManagement = ({ user }) => {
             <span className="bg-officeq-blue text-white p-1 rounded">📋</span> OfficeQ
           </div>
           <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
+           <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
               <span>🏠</span> Dashboard
             </button>
             {user.role === 'Admin' && (
@@ -176,7 +193,7 @@ const StaffManagement = ({ user }) => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(member.id)}
+                      onClick={() => handleDeleteClick(member.id)}
                       className="text-red-600 hover:text-red-800"
                     >
                       Delete
@@ -260,6 +277,15 @@ const StaffManagement = ({ user }) => {
             </div>
           </div>
         )}
+
+        {/* Confirm Dialog */}
+        <ConfirmDialog
+          isOpen={confirmDialog.open}
+          title="Remove Staff Member"
+          message="Remove this staff member? This action cannot be undone."
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
       </main>
     </div>
   );

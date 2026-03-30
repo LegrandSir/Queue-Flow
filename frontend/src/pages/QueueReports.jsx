@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';   // <-- added
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 const QueueReports = ({ user }) => {
@@ -27,6 +28,7 @@ const QueueReports = ({ user }) => {
       setStats(data);
     } catch (err) {
       console.error("Failed to fetch stats", err);
+      toast.error("Failed to fetch statistics");   // <-- added
     } finally {
       setLoading(false);
     }
@@ -40,6 +42,7 @@ const QueueReports = ({ user }) => {
       setEfficiency(data);
     } catch (err) {
       console.error("Failed to fetch efficiency", err);
+      toast.error("Failed to fetch efficiency data");   // <-- added
     }
   };
 
@@ -51,6 +54,7 @@ const QueueReports = ({ user }) => {
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
+    toast.success('Logged out');   // <-- added (optional)
   };
 
   if (!user) return null;

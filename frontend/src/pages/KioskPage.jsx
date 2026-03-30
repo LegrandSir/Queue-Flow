@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ServiceCard from '../components/ServiceCard';
 import TicketView from '../components/TicketView';
+import toast from 'react-hot-toast';
 
 const ServiceStart = () => {
   const [selectedService, setSelectedService] = useState(null);
@@ -41,6 +42,7 @@ const ServiceStart = () => {
       setServices(data.filter(s => s.active));
     } catch (error) {
       console.error("Failed to load services:", error);
+      toast.error("Could not load services. Please refresh."); // added
     }
   };
 
@@ -53,6 +55,7 @@ const ServiceStart = () => {
       }
     } catch (error) {
       console.error("Error fetching kiosk status:", error);
+      // silent fail, no toast to avoid spamming
     }
   };
 
@@ -84,9 +87,10 @@ const ServiceStart = () => {
       const data = await response.json();
       setTicketData(data); 
       fetchKioskStatus();
+      toast.success(`Ticket ${data.ticket_number} created!`); // added success toast
     } catch (error) {
       console.error("Error generating ticket:", error);
-      alert("Failed to connect to the server.");
+      toast.error("Failed to connect to the server."); // replaced alert
     } finally {
       setIsLoading(false);
     }
@@ -132,14 +136,12 @@ const ServiceStart = () => {
             active={selectedService === s.name}
             onSelect={() => {
               setSelectedService(s.name);
-              // Reset priority when service changes (optional)
               setIsPriority(false);
             }}
           />
         ))}
       </div>
 
-      {/* Priority toggle – only shown after a service is selected */}
       {selectedService && (
         <div className="mt-10 p-6 bg-blue-50 rounded-2xl border-2 border-blue-100 w-full max-w-lg flex items-center justify-between">
           <div>
@@ -168,7 +170,6 @@ const ServiceStart = () => {
 
       <div className="w-full max-w-5xl h-px bg-gray-200 my-16"></div>
 
-      {/* Dynamic Status Cards */}
       <div className="w-full max-w-5xl">
         <h2 className="text-3xl font-black text-center text-gray-800 mb-10">Current Queue Status</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
