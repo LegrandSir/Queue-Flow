@@ -69,42 +69,125 @@ def get_ai_insights():
         return jsonify({"insight": "⚠️ Intelligence module is recalibrating. Please refresh in a moment."}), 200
 # --- AI USER CHAT ---
 
+# @main.route('/api/user/ai-chat', methods=['POST'])
+# def user_ai_chat():
+#     try:
+#         data = request.get_json()
+#         t_num = data.get('ticket_number')
+#         msg = data.get('message', '').lower()
+
+#         ticket = Ticket.query.filter_by(ticket_number=t_num).first()
+#         people_ahead = 0
+#         service = "General"
+        
+#         if ticket:
+#             service = ticket.service_type
+#             people_ahead = Ticket.query.filter(
+#                 Ticket.status == 'waiting', 
+#                 Ticket.service_type == service,
+#                 Ticket.created_at < ticket.created_at
+#             ).count()
+
+#         # Context-Aware Responses
+#         if any(word in msg for word in ["long", "wait", "time"]):
+#             wait_min = (people_ahead + 1) * 5
+#             reply = f"There are currently {people_ahead} people ahead of you. Your estimated wait is {wait_min} minutes."
+#         elif any(word in msg for word in ["next", "turn", "position"]):
+#             reply = "You are next!" if people_ahead == 0 else f"You are currently at position {people_ahead + 1} in the {service} queue."
+#         elif "help" in msg or "hi" in msg or "hello" in msg:
+#             reply = f"Hello! I'm here to help with your visit. You're in line for {service}."
+#         else:
+#             # General fallback that still uses real data
+#             reply = f"You are currently in the {service} queue with {people_ahead} people ahead of you. Is there anything specific you'd like to know?"
+
+#         return jsonify({"reply": reply}), 200
+
+#     except Exception as e:
+#         return jsonify({"reply": "I'm currently updating my queue data. Please check the main display!"}), 200
+# # --- TICKET GENERATION & MOBILE STATUS ---
+
 @main.route('/api/user/ai-chat', methods=['POST'])
 def user_ai_chat():
     try:
         data = request.get_json()
         t_num = data.get('ticket_number')
-        msg = data.get('message', '').lower()
-
-        ticket = Ticket.query.filter_by(ticket_number=t_num).first()
-        people_ahead = 0
-        service = "General"
+        msg = data.get('message', '').lower().strip()
         
-        if ticket:
-            service = ticket.service_type
-            people_ahead = Ticket.query.filter(
-                Ticket.status == 'waiting', 
-                Ticket.service_type == service,
-                Ticket.created_at < ticket.created_at
-            ).count()
-
-        # Context-Aware Responses
-        if any(word in msg for word in ["long", "wait", "time"]):
-            wait_min = (people_ahead + 1) * 5
-            reply = f"There are currently {people_ahead} people ahead of you. Your estimated wait is {wait_min} minutes."
-        elif any(word in msg for word in ["next", "turn", "position"]):
-            reply = "You are next!" if people_ahead == 0 else f"You are currently at position {people_ahead + 1} in the {service} queue."
-        elif "help" in msg or "hi" in msg or "hello" in msg:
-            reply = f"Hello! I'm here to help with your visit. You're in line for {service}."
+        ticket = Ticket.query.filter_by(ticket_number=t_num).first()
+        if not ticket:
+            return jsonify({"reply": "I couldn't find your ticket. Please check your ticket number and try again."}), 200
+        
+        people_ahead = Ticket.query.filter(
+            Ticket.status == 'waiting',
+            Ticket.service_type == ticket.service_type,
+            Ticket.created_at < ticket.created_at
+        ).count()
+        
+        serving = Ticket.query.filter_by(status='serving', service_type=ticket.service_type).first()
+        currently_serving = serving.ticket_number if serving else "no one"
+        
+        position = people_ahead + 1
+        wait_min = (people_ahead + 1) * 5
+        service = ticket.service_type
+        ticket_num = ticket.ticket_number
+        
+        # ---- Short answers for factual queries ----
+        if any(word in msg for word in ['how long', 'wait time', 'how many minutes', 'estimated time', 'waiting time']):
+            reply = f"Your estimated wait time is about {wait_min} minutes. There {'is' if people_ahead == 1 else 'are'} {people_ahead} {'person' if people_ahead == 1 else 'people'} ahead of you in the {service} queue."
+        
+        elif any(word in msg for word in ['position', 'place', 'where am i', 'how many ahead', 'queue position']):
+            reply = f"You are number {position} in the {service} queue. {people_ahead} {'person is' if people_ahead == 1 else 'people are'} ahead of you."
+        
+        elif any(word in msg for word in ['next', 'turn', 'when will i be called', 'is it my turn', 'am i next']):
+            if people_ahead == 0:
+                reply = f"You are next in line for {service}! Please stay near the counter so you don't miss your turn."
+            else:
+                reply = f"You are not next yet. There are {people_ahead} people ahead of you. Your estimated wait is about {wait_min} minutes."
+        
+        elif any(word in msg for word in ['serving', 'now serving', 'current ticket', 'counter', 'who is being served']):
+            reply = f"Currently serving ticket {currently_serving} for {service}. Your ticket is {ticket_num}. You are number {position} in line."
+        
+        elif any(word in msg for word in ['will i be helped', 'will i get service', 'am i going to be served']):
+            if people_ahead == 0:
+                reply = f"Yes, you are next in line for {service}. You will be helped very soon. Please wait near the counter."
+            else:
+                reply = f"Yes, absolutely. You are number {position} in the {service} queue. We will call your ticket ({ticket_num}) when it's your turn. Estimated wait is {wait_min} minutes."
+        
+        # ---- Longer, helpful answers for explanatory questions ----
+        elif any(word in msg for word in ['how does priority work', 'priority', 'what is priority', 'priority attention']):
+            reply = f"Priority attention is for customers who need extra assistance, such as persons with disabilities (PWD), elderly individuals, or expectant mothers. When you select priority at the kiosk, your ticket gets a higher priority level and will be served before regular tickets in the same service line. This helps ensure that those who may have difficulty waiting longer receive faster service. You are currently in the {service} queue. If you need priority assistance, please speak to a staff member at the counter."
+        
+        elif any(word in msg for word in ['what should i do', 'how to prepare', 'documents', 'what to bring']):
+            reply = f"While waiting for {service}, please ensure you have any necessary documents ready. For {service}, common requirements include a valid ID, completed forms, and any relevant paperwork. If you're unsure, you can ask a staff member. We'll notify you via this page when it's your turn. Your position is #{position}, estimated wait {wait_min} minutes."
+        
+        elif any(word in msg for word in ['missed', 'missed ticket', 'what happens if i miss']):
+            reply = f"If you miss your turn, staff may mark your ticket as 'missed'. You will receive a notification, and you will need to take a new ticket from the kiosk to re-enter the queue. To avoid missing your turn, please stay near the counter and watch the display or keep this page open for real‑time updates. Your current ticket is {ticket_num}."
+        
+        elif any(word in msg for word in ['can i leave', 'step away', 'go out']):
+            reply = f"You can step away briefly, but please stay close to the counter area. If you are not present when your ticket is called, staff may mark you as missed. We recommend staying within earshot or watching this page for your turn. Your estimated wait is {wait_min} minutes."
+        
+        elif any(word in msg for word in ['how accurate', 'is the wait time accurate']):
+            reply = f"The wait time is an estimate based on the number of people ahead of you and the average service duration ({service} typically takes about {ticket.service_duration if hasattr(ticket, 'service_duration') else 5} minutes). Actual wait may vary depending on the complexity of each service. We update the estimate regularly. Currently, {people_ahead} people are ahead of you."
+        
+        # ---- Greetings and thanks ----
+        elif any(word in msg for word in ['hello', 'hi', 'hey', 'good morning', 'good afternoon']):
+            reply = f"Hello! I'm your queue assistant. You have ticket {ticket_num} for {service}. There {'is' if people_ahead == 1 else 'are'} {people_ahead} {'person' if people_ahead == 1 else 'people'} ahead of you. How can I help you today? You can ask about your wait time, position, or how priority works."
+        
+        elif any(word in msg for word in ['thank', 'thanks', 'appreciate']):
+            reply = f"You're very welcome! If you have any other questions while waiting, just ask. We're here to help make your visit smoother."
+        
+        elif any(word in msg for word in ['help', 'what can i ask', 'options', 'commands']):
+            reply = f"You can ask me about:\n- Your current wait time and position\n- When you will be called\n- Who is being served now\n- How priority attention works\n- What to do if you miss your turn\n- General advice while waiting\n\nJust type your question naturally. For example: 'How long is the wait?' or 'What should I do while waiting?'"
+        
+        # ---- Fallback for unrecognized questions ----
         else:
-            # General fallback that still uses real data
-            reply = f"You are currently in the {service} queue with {people_ahead} people ahead of you. Is there anything specific you'd like to know?"
-
+            reply = f"I understand you're asking about '{msg}'. Could you please rephrase? I can help with questions about your wait time, position in the queue, who is being served, priority attention, or what to do while waiting. For example, try: 'How long is the wait?' or 'What is priority attention?'"
+        
         return jsonify({"reply": reply}), 200
-
+    
     except Exception as e:
-        return jsonify({"reply": "I'm currently updating my queue data. Please check the main display!"}), 200
-# --- TICKET GENERATION & MOBILE STATUS ---
+        print(f"Chat error: {e}")
+        return jsonify({"reply": "I'm having trouble connecting to the queue system. Please check with a staff member for updates."}), 200
 
 @main.route('/api/tickets/generate', methods=['POST'])
 def generate_ticket():

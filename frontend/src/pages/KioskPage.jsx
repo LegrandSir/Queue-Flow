@@ -137,15 +137,7 @@ const KioskPage = () => {
       {/* Blue welcome header with ticket icon */}
       <div className="w-full bg-gradient-to-r from-officeq-blue to-blue-600 text-white py-12 px-4 rounded-b-3xl mb-12 shadow-lg">
         <div className="max-w-5xl mx-auto text-center relative">
-          <div className="absolute top-0 right-0">
-            <Link 
-              to="/login" 
-              className="text-sm bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-medium transition-colors"
-            >
-              Staff Login
-            </Link>
-          </div>
-          <img src="/logo.png" alt="OfficeQ Logo" className="h-20 w-auto mx-auto mb-4 invert brightness-0" />
+          <img src="/logo.png" alt="OfficeQ Logo" className="h-24 w-auto mx-auto " />
           <h1 className="text-5xl font-black tracking-tight">Welcome to OfficeQ</h1>
           <div className="flex items-center justify-center gap-2 mt-4">
             <span className="text-4xl">🎫</span>

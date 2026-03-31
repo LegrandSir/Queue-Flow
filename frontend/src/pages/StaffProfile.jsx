@@ -102,9 +102,10 @@ const StaffProfile = ({ user }) => {
     <div className="flex min-h-screen bg-[#F8F9FA]">
       <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
         <div>
-          <div className="flex items-center gap-2 text-officeq-blue font-bold text-xl mb-8">
-            <span className="bg-officeq-blue text-white p-1 rounded">📋</span> OfficeQ
-          </div>
+           <div className="flex items-center gap-2 mb-8">
+      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
+      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
+    </div>
           <nav className="space-y-2">
             <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
               <span>🏠</span> Dashboard
