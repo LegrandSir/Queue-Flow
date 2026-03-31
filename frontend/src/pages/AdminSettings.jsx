@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';  // <-- added
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';
 
 const AdminSettings = ({ user }) => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const AdminSettings = ({ user }) => {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   // Auth guard
   useEffect(() => {
@@ -40,7 +42,7 @@ const AdminSettings = ({ user }) => {
         }
       } catch (err) {
         console.error("Failed to fetch settings", err);
-        toast.error("Failed to load settings"); // <-- added
+        toast.error("Failed to load settings");
       } finally {
         setLoading(false);
       }
@@ -57,10 +59,10 @@ const AdminSettings = ({ user }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: value })
       });
-      toast.success("Setting saved"); // <-- added success notification
+      toast.success("Setting saved");
     } catch (err) {
       console.error("Failed to save setting", err);
-      toast.error("Failed to save setting"); // <-- replaced alert
+      toast.error("Failed to save setting");
     } finally {
       setSaving(false);
     }
@@ -78,12 +80,12 @@ const AdminSettings = ({ user }) => {
         document.body.appendChild(a);
         a.click();
         a.remove();
-        toast.success("Data exported successfully"); // <-- added success
+        toast.success("Data exported successfully");
       } else {
-        toast.error("Export failed"); // <-- replaced alert
+        toast.error("Export failed");
       }
     } catch (err) {
-      toast.error("Failed to export data"); // <-- replaced alert
+      toast.error("Failed to export data");
     }
   };
 
@@ -91,9 +93,9 @@ const AdminSettings = ({ user }) => {
     if (window.confirm("Warning: This will delete ALL active tickets. Continue?")) {
       const response = await fetch('/api/system/clear-cache', { method: 'POST' });
       if (response.ok) {
-        toast.success("Queue cache cleared!"); // <-- replaced alert
+        toast.success("Queue cache cleared!");
       } else {
-        toast.error("Clear cache failed"); // <-- replaced alert
+        toast.error("Clear cache failed");
       }
     }
   };
@@ -102,19 +104,21 @@ const AdminSettings = ({ user }) => {
     if (window.confirm("Reboot will reset SLA targets and reload the system. Continue?")) {
       const response = await fetch('/api/system/reboot', { method: 'POST' });
       if (response.ok) {
-        toast.success("System rebooted. Page will reload."); // <-- replaced alert
+        toast.success("System rebooted. Page will reload.");
         setTimeout(() => window.location.reload(), 1500);
       } else {
-        toast.error("Reboot failed"); // <-- replaced alert
+        toast.error("Reboot failed");
       }
     }
   };
 
-  const handleLogout = () => {
+  const openLogoutConfirm = () => setLogoutConfirm(true);
+  const handleLogoutConfirmed = () => {
     localStorage.removeItem('user');
     navigate('/login');
-    toast.success("Logged out"); // <-- added optional
+    toast.success("Logged out");
   };
+  const handleCancelLogout = () => setLogoutConfirm(false);
 
   if (!user) return null;
 
@@ -148,7 +152,7 @@ const AdminSettings = ({ user }) => {
             )}
           </nav>
         </div>
-        <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
+        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
           <span>🚪</span> Logout
         </button>
       </aside>
@@ -258,6 +262,15 @@ const AdminSettings = ({ user }) => {
           </div>
         )}
       </main>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={logoutConfirm}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={handleLogoutConfirmed}
+        onCancel={handleCancelLogout}
+      />
     </div>
   );
 };

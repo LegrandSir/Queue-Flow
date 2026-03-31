@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';
 
 const AdminDashboard = ({ user }) => {
   const navigate = useNavigate();
@@ -12,6 +14,7 @@ const AdminDashboard = ({ user }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState(''); // 'tickets', 'staff', 'services'
   const [loading, setLoading] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (!user) navigate('/login');
@@ -46,10 +49,13 @@ const AdminDashboard = ({ user }) => {
     setModalOpen(true);
   };
 
-  const handleLogout = () => {
+  const openLogoutConfirm = () => setLogoutConfirm(true);
+  const handleLogoutConfirmed = () => {
     localStorage.removeItem('user');
+    toast.success('Logged out');
     navigate('/login');
   };
+  const handleCancelLogout = () => setLogoutConfirm(false);
 
   if (!user) return null;
 
@@ -78,7 +84,7 @@ const AdminDashboard = ({ user }) => {
             </button>
           </nav>
         </div>
-        <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
+        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
           <span>🚪</span> Logout
         </button>
       </aside>
@@ -173,6 +179,15 @@ const AdminDashboard = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={logoutConfirm}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={handleLogoutConfirmed}
+        onCancel={handleCancelLogout}
+      />
     </div>
   );
 };

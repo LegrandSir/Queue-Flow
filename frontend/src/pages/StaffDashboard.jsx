@@ -11,8 +11,11 @@ const StaffDashboard = ({ user }) => {
   const [availableServices, setAvailableServices] = useState([]);
   const [nowServing, setNowServing] = useState('---');
   const [confirmDialog, setConfirmDialog] = useState({ open: false, service: null });
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const [insight, setInsight] = useState('');
+  const [loadingInsight, setLoadingInsight] = useState(false);
 
-  // Fetch services from backend
+  // Fetch services
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -29,7 +32,7 @@ const StaffDashboard = ({ user }) => {
     fetchServices();
   }, []);
 
-  // Fetch all active tickets (both waiting and serving)
+  // Fetch all active tickets (waiting + serving)
   const fetchQueue = async () => {
     try {
       const response = await fetch('/api/tickets/active');
@@ -52,13 +55,31 @@ const StaffDashboard = ({ user }) => {
     }
   };
 
+  // Fetch AI insights
+  const fetchAIInsights = async () => {
+    setLoadingInsight(true);
+    try {
+      const response = await fetch('/api/admin/ai-insights');
+      if (!response.ok) throw new Error('Failed to fetch insights');
+      const data = await response.json();
+      setInsight(data.insight);
+    } catch (error) {
+      console.error("Error fetching AI insights:", error);
+      setInsight("⚠️ Unable to load insights at this time.");
+    } finally {
+      setLoadingInsight(false);
+    }
+  };
+
   // Poll every 5 seconds
   useEffect(() => {
     fetchQueue();
     fetchNowServing();
+    fetchAIInsights();
     const interval = setInterval(() => {
       fetchQueue();
       fetchNowServing();
+      fetchAIInsights();
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -83,6 +104,7 @@ const StaffDashboard = ({ user }) => {
         toast.success(data.message);
         fetchQueue();
         fetchNowServing();
+        fetchAIInsights();
       } else {
         toast.error(data.message);
       }
@@ -98,19 +120,20 @@ const StaffDashboard = ({ user }) => {
     setConfirmDialog({ open: false, service: null });
   };
 
-  const handleLogout = () => {
+  // Logout confirmation
+  const openLogoutConfirm = () => setLogoutConfirm(true);
+  const handleLogoutConfirmed = () => {
     localStorage.removeItem('user');
-    navigate('/login');
     toast.success('Logged out');
+    navigate('/login');
   };
+  const handleCancelLogout = () => setLogoutConfirm(false);
 
   if (!user) return null;
 
   // Filter tickets by status
   const waitingTickets = activeTickets.filter(t => t.status === 'waiting');
   const servingTickets = activeTickets.filter(t => t.status === 'serving');
-
-  // Stats for waiting only
   const priorityWaiting = waitingTickets.filter(t => t.priority_level > 0).length;
   const standardWaiting = waitingTickets.filter(t => t.priority_level === 0).length;
 
@@ -137,12 +160,11 @@ const StaffDashboard = ({ user }) => {
             </button>
           </nav>
         </div>
-        <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
+        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
           <span>🚪</span> Logout
         </button>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 ml-64 p-8">
         <div className="max-w-6xl mx-auto">
           <header className="flex justify-between items-center mb-8">
@@ -167,6 +189,36 @@ const StaffDashboard = ({ user }) => {
               </button>
             </div>
           </header>
+
+          {/* AI Insights Panel */}
+          <div className="bg-gray-900 rounded-3xl p-8 mb-10 shadow-xl border border-gray-800">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <span className="text-2xl">🧠</span>
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
+                </div>
+                <h2 className="text-white font-black text-xl tracking-tight">Operations Insights</h2>
+              </div>
+              <button 
+                onClick={fetchAIInsights}
+                className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all border border-white/10"
+              >
+                {loadingInsight ? 'Analyzing...' : 'Refresh Analysis'}
+              </button>
+            </div>
+            {insight ? (
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-6">
+                <p className="text-blue-100 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                  {insight}
+                </p>
+              </div>
+            ) : (
+              <div className="text-gray-500 text-sm font-medium animate-pulse italic">
+                Analyzing queue patterns...
+              </div>
+            )}
+          </div>
 
           {/* Now Serving Card */}
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-8">
@@ -219,14 +271,18 @@ const StaffDashboard = ({ user }) => {
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan="4" className="px-6 py-12 text-center text-gray-400 font-medium">No waiting tickets.</td></tr>
+                    <tr>
+                      <td colSpan="4" className="px-6 py-12 text-center text-gray-400 font-medium">
+                        No waiting tickets.
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Currently Serving Tickets Table (only if there are serving tickets) */}
+          {/* Currently Serving Tickets Table */}
           {servingTickets.length > 0 && (
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
@@ -268,7 +324,7 @@ const StaffDashboard = ({ user }) => {
             </div>
           )}
 
-          {/* Quick Stats Sidebar (original placement – but we already have stats, keep for consistency) */}
+          {/* Quick Stats Sidebar */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2"></div>
             <div className="space-y-6">
@@ -290,13 +346,22 @@ const StaffDashboard = ({ user }) => {
         </div>
       </main>
 
-      {/* Confirm Dialog */}
+      {/* Confirm Dialog for Call Next */}
       <ConfirmDialog
         isOpen={confirmDialog.open}
         title="Call Next Ticket"
         message={`Are you sure you want to call the next ticket for "${confirmDialog.service}"?`}
         onConfirm={handleCallNextConfirmed}
         onCancel={handleCancelConfirm}
+      />
+
+      {/* Confirm Dialog for Logout */}
+      <ConfirmDialog
+        isOpen={logoutConfirm}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={handleLogoutConfirmed}
+        onCancel={handleCancelLogout}
       />
     </div>
   );

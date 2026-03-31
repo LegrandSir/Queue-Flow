@@ -4,7 +4,7 @@ import ServiceCard from '../components/ServiceCard';
 import TicketView from '../components/TicketView';
 import toast from 'react-hot-toast';
 
-const ServiceStart = () => {
+const KioskPage = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [ticketData, setTicketData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +14,7 @@ const ServiceStart = () => {
     currently_serving: '---',
     estimated_wait: '5-10'
   });
+  const [displayWait, setDisplayWait] = useState('5-10');
 
   const getIconForService = (serviceName) => {
     const iconMap = {
@@ -42,7 +43,7 @@ const ServiceStart = () => {
       setServices(data.filter(s => s.active));
     } catch (error) {
       console.error("Failed to load services:", error);
-      toast.error("Could not load services. Please refresh."); // added
+      toast.error("Could not load services. Please refresh.");
     }
   };
 
@@ -55,7 +56,23 @@ const ServiceStart = () => {
       }
     } catch (error) {
       console.error("Error fetching kiosk status:", error);
-      // silent fail, no toast to avoid spamming
+    }
+  };
+
+  // NEW: Fetch priority‑adjusted wait time
+  const fetchPriorityEstimate = async () => {
+    if (!selectedService) return;
+    try {
+      const response = await fetch(`/api/kiosk/estimate?service=${encodeURIComponent(selectedService)}&priority=${isPriority}`);
+      const data = await response.json();
+      if (response.ok) {
+        setDisplayWait(data.estimated_wait);
+      } else {
+        setDisplayWait(kioskStatus.estimated_wait || '5-10');
+      }
+    } catch (error) {
+      console.error("Error fetching estimate:", error);
+      setDisplayWait(kioskStatus.estimated_wait || '5-10');
     }
   };
 
@@ -65,6 +82,11 @@ const ServiceStart = () => {
     const interval = setInterval(fetchKioskStatus, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Re‑fetch estimate when service or priority changes
+  useEffect(() => {
+    fetchPriorityEstimate();
+  }, [selectedService, isPriority]);
 
   const handleTakeTicket = async () => {
     if (!selectedService) return;
@@ -87,10 +109,10 @@ const ServiceStart = () => {
       const data = await response.json();
       setTicketData(data); 
       fetchKioskStatus();
-      toast.success(`Ticket ${data.ticket_number} created!`); // added success toast
+      toast.success(`Ticket ${data.ticket_number} created!`);
     } catch (error) {
       console.error("Error generating ticket:", error);
-      toast.error("Failed to connect to the server."); // replaced alert
+      toast.error("Failed to connect to the server.");
     } finally {
       setIsLoading(false);
     }
@@ -112,19 +134,26 @@ const ServiceStart = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center py-12 px-4">
-      <header className="mb-12 text-center relative">
-        <div className="absolute top-0 right-0">
-          <Link 
-            to="/login" 
-            className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition-colors"
-          >
-            Staff Login
-          </Link>
+      {/* Blue welcome header with ticket icon */}
+      <div className="w-full bg-gradient-to-r from-officeq-blue to-blue-600 text-white py-12 px-4 rounded-b-3xl mb-12 shadow-lg">
+        <div className="max-w-5xl mx-auto text-center relative">
+          <div className="absolute top-0 right-0">
+            <Link 
+              to="/login" 
+              className="text-sm bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-medium transition-colors"
+            >
+              Staff Login
+            </Link>
+          </div>
+          <img src="/logo.png" alt="OfficeQ Logo" className="h-20 w-auto mx-auto mb-4 invert brightness-0" />
+          <h1 className="text-5xl font-black tracking-tight">Welcome to OfficeQ</h1>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <span className="text-4xl">🎫</span>
+            <p className="text-2xl font-semibold text-blue-100">Get a Ticket</p>
+          </div>
+          <p className="text-lg text-blue-100 mt-2">Select a service below to join the queue</p>
         </div>
-        <img src="/logo.png" alt="OfficeQ Logo" className="h-24 w-auto mx-auto mb-4" />
-        <h1 className="text-5xl font-black text-gray-900 tracking-tight">Get a Ticket</h1>
-        <p className="text-gray-500 mt-3 text-xl font-medium">Select a service to start your queue ticket</p>
-      </header>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-5xl">
         {services.map((s) => (
@@ -180,9 +209,12 @@ const ServiceStart = () => {
           </div>
           <div className="bg-white rounded-officeq p-10 border-2 border-gray-100 text-center shadow-lg">
             <p className="text-gray-500 text-2xl font-bold mb-2">Estimated Wait Time</p>
-            <h3 className="text-8xl font-black text-gray-900 mb-2 tracking-tighter">{kioskStatus.estimated_wait}</h3>
+            <h3 className="text-8xl font-black text-gray-900 mb-2 tracking-tighter">{displayWait}</h3>
             <p className="text-3xl font-black text-gray-800 mb-2">minutes</p>
             <p className="text-gray-400 text-base font-medium">for your selected service</p>
+            {isPriority && (
+              <p className="text-sm text-green-600 mt-2 font-bold">Priority reduces wait time!</p>
+            )}
           </div>
         </div>
       </div>
@@ -194,4 +226,4 @@ const ServiceStart = () => {
   );
 };
 
-export default ServiceStart;
+export default KioskPage;

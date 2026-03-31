@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import ConfirmDialog from './ConfirmDialog';
 
-
 const ServiceManagement = ({ user }) => {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
@@ -11,7 +10,8 @@ const ServiceManagement = ({ user }) => {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', duration: 10 });
   const [loading, setLoading] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null }); // <-- moved inside component
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null });
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -115,11 +115,13 @@ const ServiceManagement = ({ user }) => {
     }
   };
 
-  const handleLogout = () => {
+  const openLogoutConfirm = () => setLogoutConfirm(true);
+  const handleLogoutConfirmed = () => {
     localStorage.removeItem('user');
     navigate('/login');
     toast.success('Logged out');
   };
+  const handleCancelLogout = () => setLogoutConfirm(false);
 
   if (!user) return null;
 
@@ -152,7 +154,7 @@ const ServiceManagement = ({ user }) => {
             )}
           </nav>
         </div>
-        <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
+        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
           <span>🚪</span> Logout
         </button>
       </aside>
@@ -258,13 +260,22 @@ const ServiceManagement = ({ user }) => {
           </div>
         )}
 
-        {/* Confirm Dialog */}
+        {/* Delete Confirm Dialog */}
         <ConfirmDialog
           isOpen={confirmDialog.open}
           title="Delete Service"
           message="Delete this service? It will be removed from the system."
           onConfirm={handleDeleteConfirm}
           onCancel={handleDeleteCancel}
+        />
+
+        {/* Logout Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={logoutConfirm}
+          title="Logout"
+          message="Are you sure you want to log out?"
+          onConfirm={handleLogoutConfirmed}
+          onCancel={handleCancelLogout}
         />
       </main>
     </div>

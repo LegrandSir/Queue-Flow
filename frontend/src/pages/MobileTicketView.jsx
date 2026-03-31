@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const MobileTicketView = () => {
   const { ticketNumber } = useParams();
@@ -36,6 +37,7 @@ const MobileTicketView = () => {
       setTicketStatus(data);
     } catch (error) {
       console.error("Error fetching ticket status:", error);
+      toast.error("Failed to fetch ticket status");
     } finally {
       setLoading(false);
     }
@@ -66,6 +68,7 @@ const MobileTicketView = () => {
       setChatLog(prev => [...prev, { role: 'ai', text: data.reply }]);
     } catch (err) {
       setChatLog(prev => [...prev, { role: 'ai', text: "Sorry, I'm offline right now." }]);
+      toast.error("AI service unavailable");
     } finally {
       setIsTyping(false);
     }
@@ -73,13 +76,18 @@ const MobileTicketView = () => {
 
   const handleEnableNotifications = async () => {
     if (!("Notification" in window)) {
-      alert("This browser does not support notifications.");
+      toast.error("This browser does not support notifications.");
     } else if (Notification.permission === "granted") {
       setNotificationsEnabled(true);
-      alert("Notifications are active!");
+      toast.success("Notifications are active!");
     } else {
       const permission = await Notification.requestPermission();
-      if (permission === "granted") setNotificationsEnabled(true);
+      if (permission === "granted") {
+        setNotificationsEnabled(true);
+        toast.success("Notifications enabled!");
+      } else {
+        toast.error("Notification permission denied");
+      }
     }
   };
 

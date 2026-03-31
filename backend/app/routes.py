@@ -389,33 +389,7 @@ def delete_staff(staff_id):
 
 from .models import SystemSetting   # at the top
 
-# --- System Settings ---
 
-@main.route('/api/settings', methods=['GET'])
-def get_settings():
-    """Return all system settings as a key-value object."""
-    settings = SystemSetting.query.all()
-    return jsonify({s.setting_key: s.setting_value for s in settings}), 200
-
-@main.route('/api/settings/update', methods=['POST'])
-def update_setting():
-    """Update a single setting. Expects JSON like {"key": "value"}."""
-    data = request.get_json()
-    if not data or len(data) != 1:
-        return jsonify({"error": "Invalid request"}), 400
-
-    key = list(data.keys())[0]
-    value = data[key]
-
-    setting = SystemSetting.query.filter_by(setting_key=key).first()
-    if setting:
-        setting.setting_value = value
-    else:
-        setting = SystemSetting(setting_key=key, setting_value=value)
-        db.session.add(setting)
-
-    db.session.commit()
-    return jsonify({"message": "Updated"}), 200
 
 @main.route('/api/reports/stats', methods=['GET'])
 def get_report_stats():
@@ -484,6 +458,29 @@ def get_report_stats():
         print(f"Report error: {e}")
         return jsonify({"error": str(e)}), 500
     
+@main.route('/api/kiosk/estimate', methods=['GET'])
+def get_priority_estimate():
+    service = request.args.get('service')
+    is_priority = request.args.get('priority', 'false').lower() == 'true'
+    if not service:
+        return jsonify({"error": "Service required"}), 400
+
+    # Count waiting tickets for this service, with priority logic
+    if is_priority:
+        # Priority tickets only wait behind other priority tickets
+        ahead = Ticket.query.filter(
+            Ticket.status == 'waiting',
+            Ticket.service_type == service,
+            Ticket.priority_level > 0
+        ).count()
+    else:
+        # Normal tickets wait behind both priority and normal tickets
+        ahead = Ticket.query.filter(
+            Ticket.status == 'waiting',
+            Ticket.service_type == service
+        ).count()
+    wait_minutes = ahead * 5
+    return jsonify({"estimated_wait": str(wait_minutes)}), 200
 
 @main.route('/api/reports/efficiency', methods=['GET'])
 def get_service_efficiency():
@@ -594,3 +591,29 @@ def kiosk_status():
         "currently_serving": currently_serving,
         "estimated_wait": estimated_wait
     }), 200
+
+@main.route('/api/settings', methods=['GET'])
+def get_settings():
+    """Return all system settings as a key-value object."""
+    settings = SystemSetting.query.all()
+    return jsonify({s.setting_key: s.setting_value for s in settings}), 200
+
+@main.route('/api/settings/update', methods=['POST'])
+def update_setting():
+    """Update a single setting. Expects JSON like {"key": "value"}."""
+    data = request.get_json()
+    if not data or len(data) != 1:
+        return jsonify({"error": "Invalid request"}), 400
+
+    key = list(data.keys())[0]
+    value = data[key]
+
+    setting = SystemSetting.query.filter_by(setting_key=key).first()
+    if setting:
+        setting.setting_value = value
+    else:
+        setting = SystemSetting(setting_key=key, setting_value=value)
+        db.session.add(setting)
+
+    db.session.commit()
+    return jsonify({"message": "Updated"}), 200

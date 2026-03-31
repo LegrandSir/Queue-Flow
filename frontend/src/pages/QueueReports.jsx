@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';   // <-- added
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 const QueueReports = ({ user }) => {
@@ -9,6 +10,7 @@ const QueueReports = ({ user }) => {
   const [efficiency, setEfficiency] = useState([]);
   const [period, setPeriod] = useState(30);
   const [loading, setLoading] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   // Auth guard
   useEffect(() => {
@@ -28,7 +30,7 @@ const QueueReports = ({ user }) => {
       setStats(data);
     } catch (err) {
       console.error("Failed to fetch stats", err);
-      toast.error("Failed to fetch statistics");   // <-- added
+      toast.error("Failed to fetch statistics");
     } finally {
       setLoading(false);
     }
@@ -42,7 +44,7 @@ const QueueReports = ({ user }) => {
       setEfficiency(data);
     } catch (err) {
       console.error("Failed to fetch efficiency", err);
-      toast.error("Failed to fetch efficiency data");   // <-- added
+      toast.error("Failed to fetch efficiency data");
     }
   };
 
@@ -51,11 +53,13 @@ const QueueReports = ({ user }) => {
     fetchEfficiency();
   }, [period]);
 
-  const handleLogout = () => {
+  const openLogoutConfirm = () => setLogoutConfirm(true);
+  const handleLogoutConfirmed = () => {
     localStorage.removeItem('user');
     navigate('/login');
-    toast.success('Logged out');   // <-- added (optional)
+    toast.success('Logged out');
   };
+  const handleCancelLogout = () => setLogoutConfirm(false);
 
   if (!user) return null;
 
@@ -91,7 +95,7 @@ const QueueReports = ({ user }) => {
             )}
           </nav>
         </div>
-        <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
+        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
           <span>🚪</span> Logout
         </button>
       </aside>
@@ -186,6 +190,15 @@ const QueueReports = ({ user }) => {
           <p className="text-gray-500">No data available</p>
         )}
       </main>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={logoutConfirm}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={handleLogoutConfirmed}
+        onCancel={handleCancelLogout}
+      />
     </div>
   );
 };
