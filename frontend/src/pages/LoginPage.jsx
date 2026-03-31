@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';          // <-- added
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -22,6 +23,7 @@ const LoginPage = ({ onLogin }) => {
       if (response.ok) {
         // Call the onLogin prop to update App state
         if (onLogin) onLogin(data.user);
+        toast.success('Login successful! Redirecting...');   // <-- added
         // Navigate based on role
         if (data.user.role === 'Admin') {
           navigate('/admin-dashboard');
@@ -30,10 +32,12 @@ const LoginPage = ({ onLogin }) => {
         }
       } else {
         setError(data.message || 'Invalid credentials');
+        toast.error(data.message || 'Invalid credentials');   // <-- added
       }
     } catch (error) {
       console.error("Login error:", error);
       setError("Server connection failed.");
+      toast.error("Server connection failed.");               // <-- added
     }
   };
 

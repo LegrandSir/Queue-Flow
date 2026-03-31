@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';
 
 const ServiceManagement = ({ user }) => {
   const navigate = useNavigate();
@@ -8,6 +10,8 @@ const ServiceManagement = ({ user }) => {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', duration: 10 });
   const [loading, setLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null });
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -25,6 +29,7 @@ const ServiceManagement = ({ user }) => {
       setServices(data);
     } catch (err) {
       console.error("Failed to fetch services");
+      toast.error("Failed to fetch services");
     }
   };
 
@@ -56,29 +61,41 @@ const ServiceManagement = ({ user }) => {
       if (res.ok) {
         fetchServices();
         setModalOpen(false);
+        toast.success(editing ? 'Service updated' : 'Service added');
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to save service');
+        toast.error(err.error || 'Failed to save service');
       }
     } catch (err) {
-      alert('Error saving service');
+      toast.error('Error saving service');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this service? It will be removed from the system.')) return;
+  const handleDeleteClick = (id) => {
+    setConfirmDialog({ open: true, id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = confirmDialog.id;
     try {
       const res = await fetch(`/api/services/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchServices();
+        toast.success('Service deleted');
       } else {
-        alert('Failed to delete service');
+        toast.error('Failed to delete service');
       }
     } catch (err) {
-      alert('Error deleting service');
+      toast.error('Error deleting service');
+    } finally {
+      setConfirmDialog({ open: false, id: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setConfirmDialog({ open: false, id: null });
   };
 
   const toggleActive = async (service) => {
@@ -89,16 +106,22 @@ const ServiceManagement = ({ user }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: newActive }),
       });
-      if (res.ok) fetchServices();
+      if (res.ok) {
+        fetchServices();
+        toast.success(`Service ${newActive ? 'activated' : 'deactivated'}`);
+      }
     } catch (err) {
-      alert('Failed to update status');
+      toast.error('Failed to update status');
     }
   };
 
-  const handleLogout = () => {
+  const openLogoutConfirm = () => setLogoutConfirm(true);
+  const handleLogoutConfirmed = () => {
     localStorage.removeItem('user');
     navigate('/login');
+    toast.success('Logged out');
   };
+  const handleCancelLogout = () => setLogoutConfirm(false);
 
   if (!user) return null;
 
@@ -106,14 +129,14 @@ const ServiceManagement = ({ user }) => {
     <div className="flex min-h-screen bg-[#F8F9FA]">
       <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
         <div>
-          <div className="flex items-center gap-2 text-officeq-blue font-bold text-xl mb-8">
-            <span className="bg-officeq-blue text-white p-1 rounded">📋</span> OfficeQ
-          </div>
+           <div className="flex items-center gap-2 mb-8">
+      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
+      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
+    </div>
           <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
+            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
               <span>🏠</span> Dashboard
             </button>
-            
             {user.role === 'Admin' && (
               <>
                 <button onClick={() => navigate('/admin/services')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
@@ -123,7 +146,7 @@ const ServiceManagement = ({ user }) => {
                   <span>👥</span> Staff
                 </button>
                 <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                <span>📊</span> Reports
+                  <span>📊</span> Reports
                 </button>
                 <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
                   <span>⚙️</span> Admin Settings
@@ -132,7 +155,7 @@ const ServiceManagement = ({ user }) => {
             )}
           </nav>
         </div>
-        <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
+        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
           <span>🚪</span> Logout
         </button>
       </aside>
@@ -181,7 +204,7 @@ const ServiceManagement = ({ user }) => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(svc.id)}
+                      onClick={() => handleDeleteClick(svc.id)}
                       className="text-red-600 hover:text-red-800"
                     >
                       Delete
@@ -237,6 +260,24 @@ const ServiceManagement = ({ user }) => {
             </div>
           </div>
         )}
+
+        {/* Delete Confirm Dialog */}
+        <ConfirmDialog
+          isOpen={confirmDialog.open}
+          title="Delete Service"
+          message="Delete this service? It will be removed from the system."
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
+
+        {/* Logout Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={logoutConfirm}
+          title="Logout"
+          message="Are you sure you want to log out?"
+          onConfirm={handleLogoutConfirmed}
+          onCancel={handleCancelLogout}
+        />
       </main>
     </div>
   );

@@ -14,6 +14,7 @@ import QueueManagement from './pages/QueueManagement';
 import StaffReports from './pages/StaffReports';
 import StaffProfile from './pages/StaffProfile';
 import AdminDashboard from './pages/AdminDashboard';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -49,6 +50,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
+        <Toaster position="top-right" reverseOrder={false} />
         <Routes>
           <Route path="/" element={<KioskPage />} />
           <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import ConfirmDialog from './ConfirmDialog';
 
 const AdminSettings = ({ user }) => {
   const navigate = useNavigate();
@@ -11,6 +13,7 @@ const AdminSettings = ({ user }) => {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   // Auth guard
   useEffect(() => {
@@ -39,6 +42,7 @@ const AdminSettings = ({ user }) => {
         }
       } catch (err) {
         console.error("Failed to fetch settings", err);
+        toast.error("Failed to load settings");
       } finally {
         setLoading(false);
       }
@@ -55,9 +59,10 @@ const AdminSettings = ({ user }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: value })
       });
+      toast.success("Setting saved");
     } catch (err) {
       console.error("Failed to save setting", err);
-      alert("Failed to save setting. Check console.");
+      toast.error("Failed to save setting");
     } finally {
       setSaving(false);
     }
@@ -75,19 +80,23 @@ const AdminSettings = ({ user }) => {
         document.body.appendChild(a);
         a.click();
         a.remove();
+        toast.success("Data exported successfully");
       } else {
-        alert("Export failed");
+        toast.error("Export failed");
       }
     } catch (err) {
-      alert("Failed to export data");
+      toast.error("Failed to export data");
     }
   };
 
   const handleClearCache = async () => {
     if (window.confirm("Warning: This will delete ALL active tickets. Continue?")) {
       const response = await fetch('/api/system/clear-cache', { method: 'POST' });
-      if (response.ok) alert("Queue cache cleared!");
-      else alert("Clear cache failed");
+      if (response.ok) {
+        toast.success("Queue cache cleared!");
+      } else {
+        toast.error("Clear cache failed");
+      }
     }
   };
 
@@ -95,18 +104,21 @@ const AdminSettings = ({ user }) => {
     if (window.confirm("Reboot will reset SLA targets and reload the system. Continue?")) {
       const response = await fetch('/api/system/reboot', { method: 'POST' });
       if (response.ok) {
-        alert("System rebooted: SLA targets reset.");
-        window.location.reload();
+        toast.success("System rebooted. Page will reload.");
+        setTimeout(() => window.location.reload(), 1500);
       } else {
-        alert("Reboot failed");
+        toast.error("Reboot failed");
       }
     }
   };
 
-  const handleLogout = () => {
+  const openLogoutConfirm = () => setLogoutConfirm(true);
+  const handleLogoutConfirmed = () => {
     localStorage.removeItem('user');
     navigate('/login');
+    toast.success("Logged out");
   };
+  const handleCancelLogout = () => setLogoutConfirm(false);
 
   if (!user) return null;
 
@@ -115,11 +127,12 @@ const AdminSettings = ({ user }) => {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
         <div>
-          <div className="flex items-center gap-2 text-officeq-blue font-bold text-xl mb-8">
-            <span className="bg-officeq-blue text-white p-1 rounded">📋</span> OfficeQ
-          </div>
+          <div className="flex items-center gap-2 mb-8">
+      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
+      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
+    </div>
           <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
+            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
               <span>🏠</span> Dashboard
             </button>
             {user.role === 'Admin' && (
@@ -131,8 +144,8 @@ const AdminSettings = ({ user }) => {
                   <span>👥</span> Staff
                 </button>
                 <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-  <span>📊</span> Reports
-</button>
+                  <span>📊</span> Reports
+                </button>
                 <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
                   <span>⚙️</span> Admin Settings
                 </button>
@@ -140,7 +153,7 @@ const AdminSettings = ({ user }) => {
             )}
           </nav>
         </div>
-        <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
+        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
           <span>🚪</span> Logout
         </button>
       </aside>
@@ -250,6 +263,15 @@ const AdminSettings = ({ user }) => {
           </div>
         )}
       </main>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={logoutConfirm}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={handleLogoutConfirmed}
+        onCancel={handleCancelLogout}
+      />
     </div>
   );
 };
