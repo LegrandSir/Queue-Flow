@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import toast from 'react-hot-toast';
-import ConfirmDialog from './ConfirmDialog';
-=======
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
@@ -17,7 +13,6 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { apiFetch, apiUrl } from '../lib/api';
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 const AdminSettings = ({ user, onLogout, onQuickSwitch }) => {
   const navigate = useNavigate();
@@ -29,11 +24,7 @@ const AdminSettings = ({ user, onLogout, onQuickSwitch }) => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-<<<<<<< HEAD
-  const [logoutConfirm, setLogoutConfirm] = useState(false);
-=======
   const [confirmAction, setConfirmAction] = useState(null); // 'clear' | 'reboot' | null
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
   useEffect(() => {
     if (!user) {
@@ -62,12 +53,7 @@ const AdminSettings = ({ user, onLogout, onQuickSwitch }) => {
           }));
         }
       } catch (err) {
-<<<<<<< HEAD
-        console.error("Failed to fetch settings", err);
-        toast.error("Failed to load settings");
-=======
         console.error('Failed to fetch settings', err);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
       } finally {
         setLoading(false);
       }
@@ -83,12 +69,6 @@ const AdminSettings = ({ user, onLogout, onQuickSwitch }) => {
         method: 'POST',
         body: JSON.stringify(settings),
       });
-<<<<<<< HEAD
-      toast.success("Setting saved");
-    } catch (err) {
-      console.error("Failed to save setting", err);
-      toast.error("Failed to save setting");
-=======
       if (res.ok) {
         toast.success('Branch settings saved');
       } else {
@@ -96,7 +76,6 @@ const AdminSettings = ({ user, onLogout, onQuickSwitch }) => {
       }
     } catch {
       toast.error('Server error saving settings');
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     } finally {
       setSaving(false);
     }
@@ -104,161 +83,6 @@ const AdminSettings = ({ user, onLogout, onQuickSwitch }) => {
 
   const handleExportData = async () => {
     try {
-<<<<<<< HEAD
-      const response = await fetch('/api/system/export-csv');
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `officeq_data_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        toast.success("Data exported successfully");
-      } else {
-        toast.error("Export failed");
-      }
-    } catch (err) {
-      toast.error("Failed to export data");
-    }
-  };
-
-  const handleClearCache = async () => {
-    if (window.confirm("Warning: This will delete ALL active tickets. Continue?")) {
-      const response = await fetch('/api/system/clear-cache', { method: 'POST' });
-      if (response.ok) {
-        toast.success("Queue cache cleared!");
-      } else {
-        toast.error("Clear cache failed");
-      }
-    }
-  };
-
-  const handleReboot = async () => {
-    if (window.confirm("Reboot will reset SLA targets and reload the system. Continue?")) {
-      const response = await fetch('/api/system/reboot', { method: 'POST' });
-      if (response.ok) {
-        toast.success("System rebooted. Page will reload.");
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        toast.error("Reboot failed");
-      }
-    }
-  };
-
-  const openLogoutConfirm = () => setLogoutConfirm(true);
-  const handleLogoutConfirmed = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-    toast.success("Logged out");
-  };
-  const handleCancelLogout = () => setLogoutConfirm(false);
-
-  if (!user) return null;
-
-  return (
-    <div className="flex min-h-screen bg-[#F8F9FA]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
-        <div>
-          <div className="flex items-center gap-2 mb-8">
-      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
-      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
-    </div>
-          <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>🏠</span> Dashboard
-            </button>
-            {user.role === 'Admin' && (
-              <>
-                <button onClick={() => navigate('/admin/services')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>🛠️</span> Services
-                </button>
-                <button onClick={() => navigate('/admin/staff')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>👥</span> Staff
-                </button>
-                <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>📊</span> Reports
-                </button>
-                <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
-                  <span>⚙️</span> Admin Settings
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
-          <span>🚪</span> Logout
-        </button>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-10">
-        <h1 className="text-3xl font-black text-gray-900 mb-2">Admin Settings</h1>
-        <p className="text-gray-500 mb-8 tracking-tight">Configure system parameters, branch details, and operational tools.</p>
-
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-officeq-blue"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-8">
-            {/* System Settings Column */}
-            <div className="col-span-2 space-y-8">
-              <section className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                <h2 className="text-xl font-bold mb-6">System Settings</h2>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Wait Time (minutes)</label>
-                    <input
-                      type="number"
-                      value={settings.max_wait_time}
-                      onChange={(e) => handleUpdate('max_wait_time', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-2 focus:ring-officeq-blue focus:border-officeq-blue"
-                      min="1"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Customers will be alerted when wait exceeds this limit.</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Average Service Duration (minutes)</label>
-                    <input
-                      type="text"
-                      value={settings.avg_service_duration}
-                      onChange={(e) => handleUpdate('avg_service_duration', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-2"
-                      placeholder="e.g., 5-10"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Used for wait time estimation.</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Office/Branch Name</label>
-                    <input
-                      type="text"
-                      value={settings.office_name}
-                      onChange={(e) => handleUpdate('office_name', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-2"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Priority Escalation</label>
-                      <p className="text-xs text-gray-400">Allow priority tickets (PWD, elderly) to jump the queue.</p>
-                    </div>
-                    <button
-                      onClick={() => handleUpdate('priority_escalation', !settings.priority_escalation)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.priority_escalation ? 'bg-officeq-blue' : 'bg-gray-300'}`}
-                    >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.priority_escalation ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
-                  </div>
-                </div>
-                {saving && <p className="text-sm text-green-600 mt-4">Saving...</p>}
-              </section>
-=======
       const res = await fetch(apiUrl('/api/system/export-csv'));
       if (!res.ok) throw new Error();
       const blob = await res.blob();
@@ -326,7 +150,6 @@ const AdminSettings = ({ user, onLogout, onQuickSwitch }) => {
                   Changes sync directly to the Kiosk header and Waiting Room TV display
                 </p>
               </div>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
             </div>
 
             <div>
@@ -518,22 +341,8 @@ const AdminSettings = ({ user, onLogout, onQuickSwitch }) => {
             </motion.div>
           </motion.div>
         )}
-<<<<<<< HEAD
-      </main>
-
-      {/* Logout Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={logoutConfirm}
-        title="Logout"
-        message="Are you sure you want to log out?"
-        onConfirm={handleLogoutConfirmed}
-        onCancel={handleCancelLogout}
-      />
-    </div>
-=======
       </AnimatePresence>
     </AppShell>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
   );
 };
 

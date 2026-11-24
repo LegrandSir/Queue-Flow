@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import toast from 'react-hot-toast';
-import ConfirmDialog from './ConfirmDialog';
-=======
 import { toast } from 'sonner';
 import { User, Lock, Save, BadgeCheck } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { apiFetch } from '../lib/api';
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 const StaffProfile = ({ user, onLogout, onQuickSwitch }) => {
   const navigate = useNavigate();
@@ -22,32 +17,11 @@ const StaffProfile = ({ user, onLogout, onQuickSwitch }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   useEffect(() => {
-<<<<<<< HEAD
-    if (!user) navigate('/login');
-    fetchProfile();
-  }, [user]);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch(`/api/staff/profile?email=${user.email}`);
-      const data = await res.json();
-      setProfile({
-        email: data.email,
-        full_name: data.full_name || '',
-        id_number: data.id_number || '',
-        counter: data.counter || ''
-      });
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to load profile');
-=======
     if (!user) {
       navigate('/login');
       return;
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     }
     const fetchProfile = async () => {
       try {
@@ -71,12 +45,7 @@ const StaffProfile = ({ user, onLogout, onQuickSwitch }) => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (newPassword && newPassword !== confirmPassword) {
-<<<<<<< HEAD
-      setMessage('New passwords do not match');
-      toast.error('New passwords do not match');
-=======
       toast.error('New passwords do not match.');
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
       return;
     }
 
@@ -98,26 +67,6 @@ const StaffProfile = ({ user, onLogout, onQuickSwitch }) => {
       });
       const data = await res.json();
       if (res.ok) {
-<<<<<<< HEAD
-        setMessage('Profile updated successfully');
-        toast.success('Profile updated successfully');
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        if (currentPassword && newPassword) {
-          toast.success('Password changed. Please log in again.');
-          setCurrentPassword('');
-          setNewPassword('');
-          setConfirmPassword('');
-        }
-      } else {
-        setMessage(data.error || 'Update failed');
-        toast.error(data.error || 'Update failed');
-      }
-    } catch (err) {
-      setMessage('Error updating profile');
-      toast.error('Error updating profile');
-=======
         if (data.user) {
           localStorage.setItem('user', JSON.stringify(data.user));
         }
@@ -135,51 +84,11 @@ const StaffProfile = ({ user, onLogout, onQuickSwitch }) => {
       }
     } catch {
       toast.error('Error updating profile.');
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< HEAD
-  const openLogoutConfirm = () => setLogoutConfirm(true);
-  const handleLogoutConfirmed = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-    toast.success('Logged out');
-  };
-  const handleCancelLogout = () => setLogoutConfirm(false);
-
-  if (!user) return null;
-
-  return (
-    <div className="flex min-h-screen bg-[#F8F9FA]">
-      <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
-        <div>
-           <div className="flex items-center gap-2 mb-8">
-      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
-      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
-    </div>
-          <nav className="space-y-2">
-            <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>🏠</span> Dashboard
-            </button>
-            <button onClick={() => navigate('/queue-management')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>📋</span> Queue Management
-            </button>
-            <button onClick={() => navigate('/staff-reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>📊</span> Reports
-            </button>
-            <button onClick={() => navigate('/staff-profile')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
-              <span>👤</span> Profile
-            </button>
-          </nav>
-        </div>
-        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
-          <span>🚪</span> Logout
-        </button>
-      </aside>
-=======
   if (!user) return null;
 
   return (
@@ -202,7 +111,6 @@ const StaffProfile = ({ user, onLogout, onQuickSwitch }) => {
               <p className="text-xs text-slate-500">Shown on lobby displays when you call tickets</p>
             </div>
           </div>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">Work Email</label>
@@ -250,19 +158,6 @@ const StaffProfile = ({ user, onLogout, onQuickSwitch }) => {
             </div>
           </div>
         </div>
-<<<<<<< HEAD
-      </main>
-
-      {/* Logout Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={logoutConfirm}
-        title="Logout"
-        message="Are you sure you want to log out?"
-        onConfirm={handleLogoutConfirmed}
-        onCancel={handleCancelLogout}
-      />
-    </div>
-=======
 
         {/* Password Security */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-7 flex flex-col justify-between space-y-5">
@@ -322,7 +217,6 @@ const StaffProfile = ({ user, onLogout, onQuickSwitch }) => {
         </div>
       </form>
     </AppShell>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
   );
 };
 

@@ -1,26 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import toast from 'react-hot-toast';
-import ConfirmDialog from './ConfirmDialog';
-=======
 import { toast } from 'sonner';
 import { Search, RefreshCw, Sparkles, CheckCircle2, Play, UserX } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { apiFetch } from '../lib/api';
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 const QueueManagement = ({ user, onLogout, onQuickSwitch }) => {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
-<<<<<<< HEAD
-  const [loading, setLoading] = useState(false);
-  const [logoutConfirm, setLogoutConfirm] = useState(false);
-=======
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
   useEffect(() => {
     if (!user) {
@@ -38,7 +28,6 @@ const QueueManagement = ({ user, onLogout, onQuickSwitch }) => {
       if (res.ok) setTickets(await res.json());
     } catch (err) {
       console.error(err);
-      toast.error('Failed to fetch tickets');
     } finally {
       setLoading(false);
     }
@@ -54,54 +43,7 @@ const QueueManagement = ({ user, onLogout, onQuickSwitch }) => {
       if (res.ok) {
         toast.success(data.message);
         fetchTickets();
-        toast.success(`Ticket status updated to ${status}`);
       } else {
-<<<<<<< HEAD
-        toast.error('Failed to update status');
-      }
-    } catch (err) {
-      toast.error('Error updating status');
-    }
-  };
-
-  const openLogoutConfirm = () => setLogoutConfirm(true);
-  const handleLogoutConfirmed = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-    toast.success('Logged out');
-  };
-  const handleCancelLogout = () => setLogoutConfirm(false);
-
-  if (!user) return null;
-
-  return (
-    <div className="flex min-h-screen bg-[#F8F9FA]">
-      <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
-        <div>
-          <div className="flex items-center gap-2 mb-8">
-      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
-      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
-    </div>
-          <nav className="space-y-2">
-            <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>🏠</span> Dashboard
-            </button>
-            <button onClick={() => navigate('/queue-management')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
-              <span>📋</span> Queue Management
-            </button>
-            <button onClick={() => navigate('/staff-reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>📊</span> Reports
-            </button>
-            <button onClick={() => navigate('/staff-profile')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>👤</span> Profile
-            </button>
-          </nav>
-        </div>
-        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
-          <span>🚪</span> Logout
-        </button>
-      </aside>
-=======
         toast.error(data.error || 'Failed to update ticket');
       }
     } catch {
@@ -120,7 +62,6 @@ const QueueManagement = ({ user, onLogout, onQuickSwitch }) => {
       t.service_type.toLowerCase().includes(q);
     return matchesStatus && matchesSearch;
   });
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
   return (
     <AppShell
@@ -272,22 +213,8 @@ const QueueManagement = ({ user, onLogout, onQuickSwitch }) => {
             </table>
           </div>
         )}
-<<<<<<< HEAD
-      </main>
-
-      {/* Logout Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={logoutConfirm}
-        title="Logout"
-        message="Are you sure you want to log out?"
-        onConfirm={handleLogoutConfirmed}
-        onCancel={handleCancelLogout}
-      />
-    </div>
-=======
       </div>
     </AppShell>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
   );
 };
 

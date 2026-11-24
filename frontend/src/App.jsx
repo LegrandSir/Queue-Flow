@@ -14,9 +14,6 @@ import QueueManagement from './pages/QueueManagement';
 import StaffReports from './pages/StaffReports';
 import StaffProfile from './pages/StaffProfile';
 import AdminDashboard from './pages/AdminDashboard';
-<<<<<<< HEAD
-import { Toaster } from 'react-hot-toast';
-=======
 import DemoFloatingBar from './components/DemoFloatingBar';
 import { apiFetch } from './lib/api';
 
@@ -99,7 +96,6 @@ function AppRoutes({ user, onLogin, onLogout }) {
     </>
   );
 }
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 function App() {
   const [user, setUser] = useState(null);
@@ -137,29 +133,8 @@ function App() {
 
   return (
     <Router>
-<<<<<<< HEAD
-      <div className="min-h-screen bg-gray-50">
-        <Toaster position="top-right" reverseOrder={false} />
-        <Routes>
-          <Route path="/" element={<KioskPage />} />
-          <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-          {/* Staff dashboard - for both staff and admin (admin will see extra links) */}
-          <Route path="/dashboard" element={<StaffDashboard user={user} onLogout={handleLogout} />} />
-          <Route path="/admin-settings" element={<AdminSettings user={user} onLogout={handleLogout} />} />
-          <Route path="/admin/services" element={<ServiceManagement user={user} onLogout={handleLogout} />} />
-          <Route path="/admin/staff" element={<StaffManagement user={user} onLogout={handleLogout} />} />
-          <Route path="/ticket/:ticketNumber" element={<MobileTicketView />} />
-          <Route path="/admin/reports" element={<QueueReports user={user} />} />
-          <Route path="/queue-management" element={<QueueManagement user={user} />} />
-          <Route path="/staff-reports" element={<StaffReports user={user} />} />
-          <Route path="/staff-profile" element={<StaffProfile user={user} />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard user={user} />} />
-        </Routes>
-      </div>
-=======
       <Toaster position="top-right" richColors closeButton />
       <AppRoutes user={user} onLogin={handleLogin} onLogout={handleLogout} />
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     </Router>
   );
 }

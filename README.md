@@ -1,72 +1,49 @@
-📋 OfficeQ: Smart Queue Management System
-OfficeQ is a full-stack queue management solution designed to streamline customer flow in high-traffic environments. It features a digital kiosk for customers, a live mobile tracking assistant, and a data-driven Admin Dashboard with automated operational insights.
+# QueueFlow — Real-Time Branch Queue Management System
 
-🚀 Key Features
-Dual-Interface System: Separate portals for Customers (Kiosk) and Staff (Dashboard).
+QueueFlow is a full-stack queue orchestration platform designed to eliminate lobby congestion through self-service check-in kiosks, mobile QR ticket tracking, synchronized waiting room TV displays, priority fast-tracking, and real-time SLA analytics.
 
-Smart Mobile Assistant: A "AI" chat interface that provides customers with real-time wait estimates and queue positions.
+> **Live Demo:** _[Add your Vercel URL after deploy]_  
+> *(Backend runs on Render's free tier — allow ~30s for initial cold start.)*
 
-Operations Analytics: An Admin Insight engine that analyzes live database trends to provide staffing recommendations.
+---
 
-Priority Routing: Advanced SQL-based logic to handle VIP/Priority tickets, ensuring they jump to the head of the queue.
+## Instant Demo Access
 
-Live Data Syncing: 5-second polling interval for real-time dashboard updates without page refreshes.
+Explore every role immediately using the floating **Demo Tour** bar or 1-click sign-in buttons on `/login`:
 
-🛠️ Tech Stack
-Frontend
-React (Vite): For a lightning-fast, component-based UI.
+| Role | Email | Password | Capabilities |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@queueflow.io` | `Admin123!` | Live operations engine, Recharts SLA analytics, staff & service CRUD, branch settings, CSV export |
+| **Staff** | `staff@queueflow.io` | `Staff123!` | Counter dispatch (`Call Next`), queue board filtering, ticket completion/no-show, shift reports |
+| **Customer** | _No login required_ | — | Self-service Kiosk (`/`), Mobile QR Tracker (`/ticket/:id`), Public Lobby TV Board (`/display`) |
 
-Tailwind CSS: For a modern, mobile-responsive "Apple-style" aesthetic.
+---
 
-Lucide React: For professional iconography.
+## Key Features
 
-Backend
-Flask (Python 3.8): RESTful API architecture.
+- **Priority-First Dispatch Algorithm:** Automatically prioritizes accessibility, elderly, and expectant-mother tickets (`P-series`) ahead of standard check-ins (`B-series`) while preserving FIFO ordering within each tier.
+- **Synchronized Multi-Screen Experience:** Self-service kiosk, mobile QR ticket tracker with browser turn alerts, and a high-contrast dark-mode lobby TV board polling live counter states.
+- **Deterministic Operations Engine:** Analyzes real-time queue volume, department concentration, and priority buildup to surface live staffing recommendations without external API fragility.
+- **Timestamped SLA Analytics:** Tracks `created_at`, `called_at`, and `completed_at` in East Africa Time (`Africa/Nairobi`) to compute actual wait times, completion rates, and handling efficiency vs. SLA targets.
+- **Interactive Demo Sandbox:** Built-in one-click walk-in traffic simulation (`Simulate +2 Walk-ins`) and sandbox reset controls so visitors can test live queue flow anytime.
 
-SQLAlchemy: ORM for structured data management.
+---
 
-SQLite: Lightweight, portable database for local development.
+## Tech Stack
 
-📂 Project Structure
-```
-OfficeQ/
-├── backend/            # Flask API & Database Models
-│   ├── app/            # Main application package
-│   │   ├── models.py   # Database Schema
-│   │   └── routes.py   # API Endpoints & Analytics Logic
-│   ├── instance/       # Local SQLite Database (Ignored by Git)
-│   └── run.py          # Entry point
-├── frontend/           # React Application
-│   ├── src/            # Components & Pages
-│   ├── vite.config.js  # Proxy settings for Flask
-│   └── tailwind.config.js
-└── README.md
-```
-⚙️ Installation & Setup
-1. Backend Setup
-```
-Bash
+- **Frontend:** React 19, Vite, Tailwind CSS v4, Framer Motion, Recharts, Lucide Icons, Sonner, `qrcode.react`
+- **Backend:** Python, Flask, Flask-SQLAlchemy, Flask-Migrate, Gunicorn, `pytz`
+- **Database:** PostgreSQL (Neon / Render production) with automatic zero-config SQLite fallback for local development
+
+---
+
+## Local Development Setup
+
+### 1. Backend
+```bash
 cd backend
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
+python seed_roles.py
 python run.py
-```
-2. Frontend Setup
-```
-Bash
-cd frontend
-npm install
-npm run dev
-```
-🧠 Smart Analytics Logic (The "AI" Component)
-To ensure 100% uptime and reliability during demonstrations, the Operations Insights engine utilizes a deterministic logic-based model. It queries the Ticket database to calculate:
-
-Traffic Concentration: Identifies which service department has the highest active volume.
-
-Bottleneck Detection: Calculates estimated wait times based on a 5-minute-per-person processing constant.
-
-Staffing Optimization: Suggests reallocating personnel based on real-time demand spikes.
-
-👤 Author
-Software Engineering Students-USIU AFRICA

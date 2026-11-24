@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import toast from 'react-hot-toast';
-import ConfirmDialog from './ConfirmDialog';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-=======
 import { toast } from 'sonner';
 import {
   AreaChart,
@@ -24,7 +19,6 @@ import {
 import { Download, Ticket, Clock, CheckCircle2, Sparkles } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { apiFetch, apiUrl } from '../lib/api';
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 const PIE_COLORS = ['#2563EB', '#0EA5E9', '#10B981', '#F59E0B', '#6366F1', '#EC4899'];
 
@@ -33,12 +27,7 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
   const [stats, setStats] = useState(null);
   const [efficiency, setEfficiency] = useState([]);
   const [period, setPeriod] = useState(30);
-<<<<<<< HEAD
-  const [loading, setLoading] = useState(false);
-  const [logoutConfirm, setLogoutConfirm] = useState(false);
-=======
   const [loading, setLoading] = useState(true);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
   useEffect(() => {
     if (!user) {
@@ -62,12 +51,7 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
       if (statsRes.ok) setStats(await statsRes.json());
       if (effRes.ok) setEfficiency(await effRes.json());
     } catch (err) {
-<<<<<<< HEAD
-      console.error("Failed to fetch stats", err);
-      toast.error("Failed to fetch statistics");
-=======
       console.error('Failed to load analytics', err);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     } finally {
       setLoading(false);
     }
@@ -75,80 +59,6 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
 
   const handleExportCsv = async () => {
     try {
-<<<<<<< HEAD
-      const response = await fetch('/api/reports/efficiency');
-      if (!response.ok) throw new Error('Failed to fetch efficiency');
-      const data = await response.json();
-      setEfficiency(data);
-    } catch (err) {
-      console.error("Failed to fetch efficiency", err);
-      toast.error("Failed to fetch efficiency data");
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-    fetchEfficiency();
-  }, [period]);
-
-  const openLogoutConfirm = () => setLogoutConfirm(true);
-  const handleLogoutConfirmed = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-    toast.success('Logged out');
-  };
-  const handleCancelLogout = () => setLogoutConfirm(false);
-
-  if (!user) return null;
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
-
-  return (
-    <div className="flex min-h-screen bg-[#F8F9FA]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
-        <div>
-          <div className="flex items-center gap-2 mb-8">
-      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
-      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
-    </div>
-          <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>🏠</span> Dashboard
-            </button>
-            {user.role === 'Admin' && (
-              <>
-                <button onClick={() => navigate('/admin/services')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>🛠️</span> Services
-                </button>
-                <button onClick={() => navigate('/admin/staff')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>👥</span> Staff
-                </button>
-                <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
-                  <span>📊</span> Reports
-                </button>
-                <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>⚙️</span> Admin Settings
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
-          <span>🚪</span> Logout
-        </button>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-10">
-        <h1 className="text-3xl font-black text-gray-900 mb-2">Queue Reports & Analytics</h1>
-        <p className="text-gray-500 mb-8 tracking-tight">Performance metrics and ticket statistics.</p>
-
-        {/* Period selector */}
-        <div className="mb-6 flex gap-4 items-center">
-          <label className="font-medium">Period:</label>
-          <select value={period} onChange={(e) => setPeriod(parseInt(e.target.value))} className="border border-gray-300 rounded-lg p-2">
-=======
       const response = await fetch(apiUrl('/api/system/export-csv'));
       if (!response.ok) throw new Error();
       const blob = await response.blob();
@@ -181,7 +91,6 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
             onChange={(e) => setPeriod(parseInt(e.target.value, 10))}
             className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-600"
           >
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
             <option value={7}>Last 7 days</option>
             <option value={30}>Last 30 days</option>
             <option value={90}>Last 90 days</option>
@@ -420,30 +329,12 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-<<<<<<< HEAD
-          </>
-        ) : (
-          <p className="text-gray-500">No data available</p>
-        )}
-      </main>
-
-      {/* Logout Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={logoutConfirm}
-        title="Logout"
-        message="Are you sure you want to log out?"
-        onConfirm={handleLogoutConfirmed}
-        onCancel={handleCancelLogout}
-      />
-    </div>
-=======
           </div>
         </div>
       ) : (
         <p className="text-sm text-slate-500">No analytics data available.</p>
       )}
     </AppShell>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
   );
 };
 

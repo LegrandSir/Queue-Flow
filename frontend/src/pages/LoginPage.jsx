@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-<<<<<<< HEAD
-import toast from 'react-hot-toast';          // <-- added
-=======
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import {
@@ -17,7 +14,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { apiFetch } from '../lib/api';
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -38,23 +34,6 @@ const LoginPage = ({ onLogin }) => {
 
       if (response.ok) {
         if (onLogin) onLogin(data.user);
-<<<<<<< HEAD
-        toast.success('Login successful! Redirecting...');   // <-- added
-        // Navigate based on role
-        if (data.user.role === 'Admin') {
-          navigate('/admin-dashboard');
-        } else {
-          navigate('/dashboard');
-        }
-      } else {
-        setError(data.message || 'Invalid credentials');
-        toast.error(data.message || 'Invalid credentials');   // <-- added
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setError("Server connection failed.");
-      toast.error("Server connection failed.");               // <-- added
-=======
         toast.success(`Welcome back, ${data.user.full_name || data.user.role}`);
         navigate(data.user.role === 'Admin' ? '/admin-dashboard' : '/dashboard');
       } else {
@@ -83,7 +62,6 @@ const LoginPage = ({ onLogin }) => {
       setEmail('staff@queueflow.io');
       setPassword('Staff123!');
       submitCredentials('staff@queueflow.io', 'Staff123!');
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     }
   };
 

@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import toast from 'react-hot-toast';
-import ConfirmDialog from './ConfirmDialog';
-=======
 import { toast } from 'sonner';
 import {
   AreaChart,
@@ -23,84 +19,19 @@ import {
 import { Download, Ticket, Clock, CheckCircle2, Sparkles } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { apiFetch, apiUrl } from '../lib/api';
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 const PIE_COLORS = ['#2563EB', '#0EA5E9', '#10B981', '#F59E0B', '#6366F1', '#EC4899'];
 
 const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
   const navigate = useNavigate();
-<<<<<<< HEAD
-  const [staff, setStaff] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ 
-    email: '', 
-    password: '', 
-    full_name: '', 
-    id_number: '', 
-    counter: '' 
-  });
-  const [loading, setLoading] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null });
-  const [logoutConfirm, setLogoutConfirm] = useState(false);
-=======
   const [stats, setStats] = useState(null);
   const [efficiency, setEfficiency] = useState([]);
   const [period, setPeriod] = useState(30);
   const [loading, setLoading] = useState(true);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
-<<<<<<< HEAD
-    } else if (user.role !== 'Admin') {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
-
-  const fetchStaff = async () => {
-    try {
-      const res = await fetch('/api/staff');
-      const data = await res.json();
-      setStaff(data);
-    } catch (err) {
-      console.error("Failed to fetch staff");
-      toast.error("Failed to fetch staff");
-    }
-  };
-
-  useEffect(() => {
-    fetchStaff();
-  }, []);
-
-  const openModal = (staffMember = null) => {
-    if (staffMember) {
-      setEditing(staffMember);
-      setForm({
-        email: staffMember.email,
-        password: '',
-        full_name: staffMember.full_name || '',
-        id_number: staffMember.id_number || '',
-        counter: staffMember.counter || ''
-      });
-    } else {
-      setEditing(null);
-      setForm({ email: '', password: '', full_name: '', id_number: '', counter: '' });
-    }
-    setModalOpen(true);
-  };
-
-  const handleSave = async () => {
-    setLoading(true);
-    const method = editing ? 'PUT' : 'POST';
-    const url = editing ? `/api/staff/${editing.id}` : '/api/staff';
-    const body = { ...form };
-    if (!editing && !body.password) {
-      toast.error('Password is required for new staff');
-      setLoading(false);
-=======
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
       return;
     }
     if (user.role !== 'Admin') {
@@ -113,23 +44,6 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-<<<<<<< HEAD
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) {
-        fetchStaff();
-        setModalOpen(false);
-        toast.success(editing ? 'Staff updated' : 'Staff added');
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save staff');
-      }
-    } catch (err) {
-      toast.error('Error saving staff');
-=======
       const [statsRes, effRes] = await Promise.all([
         apiFetch(`/api/reports/stats?days=${period}`),
         apiFetch('/api/reports/efficiency'),
@@ -138,90 +52,11 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
       if (effRes.ok) setEfficiency(await effRes.json());
     } catch (err) {
       console.error('Failed to load analytics', err);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< HEAD
-  const handleDeleteClick = (id) => {
-    setConfirmDialog({ open: true, id });
-  };
-
-  const handleDeleteConfirm = async () => {
-    const id = confirmDialog.id;
-    try {
-      const res = await fetch(`/api/staff/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        fetchStaff();
-        toast.success('Staff removed');
-      } else {
-        toast.error('Failed to delete staff');
-      }
-    } catch (err) {
-      toast.error('Error deleting staff');
-    } finally {
-      setConfirmDialog({ open: false, id: null });
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setConfirmDialog({ open: false, id: null });
-  };
-
-  const openLogoutConfirm = () => setLogoutConfirm(true);
-  const handleLogoutConfirmed = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-    toast.success('Logged out');
-  };
-  const handleCancelLogout = () => setLogoutConfirm(false);
-
-  if (!user) return null;
-
-  return (
-    <div className="flex min-h-screen bg-[#F8F9FA]">
-      <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
-        <div>
-           <div className="flex items-center gap-2 mb-8">
-      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
-      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
-    </div>
-          <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>🏠</span> Dashboard
-            </button>
-            {user.role === 'Admin' && (
-              <>
-                <button onClick={() => navigate('/admin/services')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>🛠️</span> Services
-                </button>
-                <button onClick={() => navigate('/admin/staff')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
-                  <span>👥</span> Staff
-                </button>
-                <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>📊</span> Reports
-                </button>
-                <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>⚙️</span> Admin Settings
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
-          <span>🚪</span> Logout
-        </button>
-      </aside>
-
-      <main className="flex-1 ml-64 p-10">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-black">Staff Management</h1>
-          <button
-            onClick={() => openModal()}
-            className="bg-officeq-blue text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-600"
-=======
   const handleExportCsv = async () => {
     try {
       const response = await fetch(apiUrl('/api/system/export-csv'));
@@ -255,7 +90,6 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
             value={period}
             onChange={(e) => setPeriod(parseInt(e.target.value, 10))}
             className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-600"
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
           >
             <option value={7}>Last 7 days</option>
             <option value={30}>Last 30 days</option>
@@ -268,51 +102,11 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
             <Download className="w-3.5 h-3.5" /> Export CSV
           </button>
         </div>
-<<<<<<< HEAD
-
-        <div className="bg-white rounded-2xl shadow overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 text-gray-500 text-sm font-medium">
-              <tr>
-                <th className="px-6 py-4">Name</th>
-                <th className="px-6 py-4">ID Number</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Counter / Desk</th>
-                <th className="px-6 py-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {staff.map((member) => (
-                <tr key={member.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">{member.full_name || '—'}</td>
-                  <td className="px-6 py-4">{member.id_number || '—'}</td>
-                  <td className="px-6 py-4">{member.email}</td>
-                  <td className="px-6 py-4">{member.counter || '—'}</td>
-                  <td className="px-6 py-4 space-x-3">
-                    <button
-                      onClick={() => openModal(member)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(member.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-=======
       }
     >
       {loading && !stats ? (
         <div className="py-20 flex justify-center">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
         </div>
       ) : stats ? (
         <div className="space-y-6">
@@ -484,29 +278,6 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
               </div>
             </div>
           </div>
-<<<<<<< HEAD
-        )}
-
-        {/* Delete Confirm Dialog */}
-        <ConfirmDialog
-          isOpen={confirmDialog.open}
-          title="Remove Staff Member"
-          message="Remove this staff member? This action cannot be undone."
-          onConfirm={handleDeleteConfirm}
-          onCancel={handleDeleteCancel}
-        />
-
-        {/* Logout Confirmation Dialog */}
-        <ConfirmDialog
-          isOpen={logoutConfirm}
-          title="Logout"
-          message="Are you sure you want to log out?"
-          onConfirm={handleLogoutConfirmed}
-          onCancel={handleCancelLogout}
-        />
-      </main>
-    </div>
-=======
 
           {/* Row 2: Service Handling Efficiency vs Target SLA */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
@@ -564,7 +335,6 @@ const QueueReports = ({ user, onLogout, onQuickSwitch }) => {
         <p className="text-sm text-slate-500">No analytics data available.</p>
       )}
     </AppShell>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
   );
 };
 

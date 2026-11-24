@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import toast from 'react-hot-toast';
-import ConfirmDialog from './ConfirmDialog';
-=======
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Ticket,
@@ -19,7 +15,6 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { apiFetch } from '../lib/api';
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 const STATUS_BADGE = {
   clear: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30',
@@ -33,16 +28,9 @@ const AdminDashboard = ({ user, onLogout, onQuickSwitch }) => {
   const [activeTickets, setActiveTickets] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
-<<<<<<< HEAD
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalType, setModalType] = useState(''); // 'tickets', 'staff', 'services'
-  const [loading, setLoading] = useState(false);
-  const [logoutConfirm, setLogoutConfirm] = useState(false);
-=======
   const [insights, setInsights] = useState(null);
   const [modalType, setModalType] = useState(null); // 'tickets' | 'staff' | 'services' | null
   const [loading, setLoading] = useState(true);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
   useEffect(() => {
     if (!user) {
@@ -79,46 +67,6 @@ const AdminDashboard = ({ user, onLogout, onQuickSwitch }) => {
 
   if (!user || user.role !== 'Admin') return null;
 
-<<<<<<< HEAD
-  const openLogoutConfirm = () => setLogoutConfirm(true);
-  const handleLogoutConfirmed = () => {
-    localStorage.removeItem('user');
-    toast.success('Logged out');
-    navigate('/login');
-  };
-  const handleCancelLogout = () => setLogoutConfirm(false);
-
-  if (!user) return null;
-
-  return (
-    <div className="flex min-h-screen bg-[#F8F9FA]">
-      <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
-        <div>
-          <div className="flex items-center gap-2 mb-8">
-      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
-      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
-    </div>
-          <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
-              <span>🏠</span> Dashboard
-            </button>
-            <button onClick={() => navigate('/admin/services')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>🛠️</span> Services
-            </button>
-            <button onClick={() => navigate('/admin/staff')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>👥</span> Staff
-            </button>
-            <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>📊</span> Analytics
-            </button>
-            <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>⚙️</span> Admin Settings
-            </button>
-          </nav>
-        </div>
-        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
-          <span>🚪</span> Logout
-=======
   const activeServices = serviceList.filter((s) => s.active);
   const priorityWaiting = activeTickets.filter(
     (t) => t.status === 'waiting' && t.priority_level > 0
@@ -138,7 +86,6 @@ const AdminDashboard = ({ user, onLogout, onQuickSwitch }) => {
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
         </button>
       }
     >
@@ -189,19 +136,6 @@ const AdminDashboard = ({ user, onLogout, onQuickSwitch }) => {
             </div>
           </div>
         </div>
-<<<<<<< HEAD
-      )}
-
-      {/* Logout Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={logoutConfirm}
-        title="Logout"
-        message="Are you sure you want to log out?"
-        onConfirm={handleLogoutConfirmed}
-        onCancel={handleCancelLogout}
-      />
-    </div>
-=======
       </div>
 
       {/* KPI Cards */}
@@ -483,7 +417,6 @@ const AdminDashboard = ({ user, onLogout, onQuickSwitch }) => {
         )}
       </AnimatePresence>
     </AppShell>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
   );
 };
 

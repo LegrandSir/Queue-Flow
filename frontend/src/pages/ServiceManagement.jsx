@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import toast from 'react-hot-toast';
-import ConfirmDialog from './ConfirmDialog';
-=======
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Clock, Layers, X, AlertTriangle } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { apiFetch } from '../lib/api';
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
 const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
   const navigate = useNavigate();
@@ -18,13 +13,7 @@ const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [form, setForm] = useState({ name: '', duration: 10 });
-<<<<<<< HEAD
-  const [loading, setLoading] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null });
-  const [logoutConfirm, setLogoutConfirm] = useState(false);
-=======
   const [saving, setSaving] = useState(false);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
   useEffect(() => {
     if (!user) {
@@ -43,12 +32,7 @@ const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
       const res = await apiFetch('/api/services');
       if (res.ok) setServices(await res.json());
     } catch (err) {
-<<<<<<< HEAD
-      console.error("Failed to fetch services");
-      toast.error("Failed to fetch services");
-=======
       console.error('Failed to fetch services', err);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     }
   };
 
@@ -86,61 +70,31 @@ const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
         toast.success(editing ? 'Service updated' : 'New service added');
         fetchServices();
         setModalOpen(false);
-        toast.success(editing ? 'Service updated' : 'Service added');
       } else {
-<<<<<<< HEAD
-        const err = await res.json();
-        toast.error(err.error || 'Failed to save service');
-      }
-    } catch (err) {
-      toast.error('Error saving service');
-=======
         toast.error(data.error || 'Failed to save service');
       }
     } catch {
       toast.error('Server error saving service');
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     } finally {
       setSaving(false);
     }
   };
 
-<<<<<<< HEAD
-  const handleDeleteClick = (id) => {
-    setConfirmDialog({ open: true, id });
-  };
-
-  const handleDeleteConfirm = async () => {
-    const id = confirmDialog.id;
-=======
   const confirmDelete = async () => {
     if (!deleteTarget) return;
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     try {
       const res = await apiFetch(`/api/services/${deleteTarget.id}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success(`Removed "${deleteTarget.name}"`);
         fetchServices();
-        toast.success('Service deleted');
       } else {
         toast.error('Failed to delete service');
       }
-<<<<<<< HEAD
-    } catch (err) {
-      toast.error('Error deleting service');
-    } finally {
-      setConfirmDialog({ open: false, id: null });
-=======
     } catch {
       toast.error('Server error deleting service');
     } finally {
       setDeleteTarget(null);
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
     }
-  };
-
-  const handleDeleteCancel = () => {
-    setConfirmDialog({ open: false, id: null });
   };
 
   const toggleActive = async (service) => {
@@ -151,69 +105,19 @@ const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
         body: JSON.stringify({ active: newActive }),
       });
       if (res.ok) {
-<<<<<<< HEAD
-        fetchServices();
-        toast.success(`Service ${newActive ? 'activated' : 'deactivated'}`);
-      }
-    } catch (err) {
-=======
         toast.success(`${service.name} ${newActive ? 'activated' : 'paused'}`);
         fetchServices();
       }
     } catch {
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
       toast.error('Failed to update status');
     }
   };
 
-<<<<<<< HEAD
-  const openLogoutConfirm = () => setLogoutConfirm(true);
-  const handleLogoutConfirmed = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-    toast.success('Logged out');
-  };
-  const handleCancelLogout = () => setLogoutConfirm(false);
-=======
   if (!user || user.role !== 'Admin') return null;
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
 
   const activeCount = services.filter((s) => s.active).length;
 
   return (
-<<<<<<< HEAD
-    <div className="flex min-h-screen bg-[#F8F9FA]">
-      <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between fixed h-full">
-        <div>
-           <div className="flex items-center gap-2 mb-8">
-      <img src="/logo.png" alt="OfficeQ Logo" className="h-8 w-auto" />
-      <span className="text-officeq-blue font-bold text-xl">OfficeQ</span>
-    </div>
-          <nav className="space-y-2">
-            <button onClick={() => navigate('/admin-dashboard')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-              <span>🏠</span> Dashboard
-            </button>
-            {user.role === 'Admin' && (
-              <>
-                <button onClick={() => navigate('/admin/services')} className="w-full text-left p-3 rounded-lg bg-blue-50 text-officeq-blue font-bold flex items-center gap-2">
-                  <span>🛠️</span> Services
-                </button>
-                <button onClick={() => navigate('/admin/staff')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>👥</span> Staff
-                </button>
-                <button onClick={() => navigate('/admin/reports')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>📊</span> Reports
-                </button>
-                <button onClick={() => navigate('/admin-settings')} className="w-full text-left p-3 rounded-lg text-gray-500 hover:bg-gray-50 font-bold transition-colors flex items-center gap-2">
-                  <span>⚙️</span> Admin Settings
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-        <button onClick={openLogoutConfirm} className="w-full text-left p-3 rounded-lg text-red-500 hover:bg-red-50 font-bold transition-colors flex items-center gap-2">
-          <span>🚪</span> Logout
-=======
     <AppShell
       user={user}
       onLogout={onLogout}
@@ -226,7 +130,6 @@ const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 transition-colors"
         >
           <Plus className="w-4 h-4" /> Add Service
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
         </button>
       }
     >
@@ -290,13 +193,8 @@ const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
                       <Pencil className="w-3.5 h-3.5" /> Edit
                     </button>
                     <button
-<<<<<<< HEAD
-                      onClick={() => handleDeleteClick(svc.id)}
-                      className="text-red-600 hover:text-red-800"
-=======
                       onClick={() => setDeleteTarget(svc)}
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 text-xs font-bold transition-colors"
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Delete
                     </button>
@@ -386,28 +284,6 @@ const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
             </motion.div>
           </motion.div>
         )}
-<<<<<<< HEAD
-
-        {/* Delete Confirm Dialog */}
-        <ConfirmDialog
-          isOpen={confirmDialog.open}
-          title="Delete Service"
-          message="Delete this service? It will be removed from the system."
-          onConfirm={handleDeleteConfirm}
-          onCancel={handleDeleteCancel}
-        />
-
-        {/* Logout Confirmation Dialog */}
-        <ConfirmDialog
-          isOpen={logoutConfirm}
-          title="Logout"
-          message="Are you sure you want to log out?"
-          onConfirm={handleLogoutConfirmed}
-          onCancel={handleCancelLogout}
-        />
-      </main>
-    </div>
-=======
       </AnimatePresence>
 
       {/* Delete Confirm Modal */}
@@ -453,7 +329,6 @@ const ServiceManagement = ({ user, onLogout, onQuickSwitch }) => {
         )}
       </AnimatePresence>
     </AppShell>
->>>>>>> b360b0e (feat: full UI/UX revamp, live TV display, demo sandbox, and production deployment config)
   );
 };
 
