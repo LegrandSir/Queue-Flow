@@ -1,17 +1,13 @@
-# Frontend
-frontend/node_modules/
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+instance/
+*.db
+
+# Node / Frontend
+node_modules/
 frontend/dist/
 frontend/.env
-
-# Backend
-backend/venv/
-**/__pycache__/
-**/*.pyc
-backend/.env
-backend/instance/
-
-# Database & OS
-*.sqlite3
-*.db
 .DS_Store
-.vscode/

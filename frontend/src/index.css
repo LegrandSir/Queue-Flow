@@ -1,24 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-officeq-blue: #1F9EF9;
-  --color-officeq-dark: #1E293B;
-  --radius-officeq: 1.5rem;
+  --color-officeq-blue: #2563EB;
+  --color-officeq-sky: #0EA5E9;
+  --color-officeq-dark: #0B1120;
+  --radius-officeq: 1.25rem;
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
 }
 
-/* GLOBAL RESET */
-:root {
-  background-color: white !important;
-  color: #1e293b !important;
-  color-scheme: light !important; /* Forces the browser out of dark mode */
+@layer base {
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background-color: #F8FAFC;
+    color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
 }
 
-body {
-  margin: 0;
-  background-color: white !important;
-}
-
-#root {
-  background-color: white !important;
-  min-height: 100vh;
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
